@@ -26,3 +26,5 @@ Planning. First client: [AgentGate](https://github.com/rasulkarimov/agent-gate) 
 ## Documents
 
 - [docs/plan.md](docs/plan.md) — model, tools, when notes are written, phases, risks
+- [form.md](form.md), [idea.md](idea.md) — Eureka 3.0 drafts
+- [docs/business-case-sources.md](docs/business-case-sources.md) — external evidence for the business case, with sources
