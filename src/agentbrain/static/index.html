@@ -6,88 +6,150 @@
 <title>agentBrain</title>
 <style>
 :root {
-  --paper: #eef1f4; --sheet: #ffffff; --ink: #1b2430; --muted: #5d6877; --faint: #98a2ae; --rule: #d7dde4;
-  --accent: #3b4ba8; --accent-soft: #e3e6f6;
-  --finding: #2f7d5b; --decision: #6a4fb3; --handover: #b4621a; --gap: #b23a48; --event: #5f6b7a; --doc: #3b4ba8;
+  --bg: #15171c; --panel: #1b1e25; --raised: #222631; --rule: #2b303c; --ink: #e2e6ee; --muted: #8e97a6; --faint: #5c6573;
+  --accent: #a493f7; --accent-soft: #2c2748;
+  --finding: #4cbf8c; --decision: #b39bf8; --handover: #f0a35e; --gap: #ef7d8a; --event: #8e97a6; --document: #78a6f0;
+  --entity: #464d5b; --edge: rgba(150, 160, 180, .22); --edge-hot: rgba(164, 147, 247, .85);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --paper: #12161c; --sheet: #1a2029; --ink: #e4e8ee; --muted: #9aa5b3; --faint: #687280; --rule: #2a323d;
-    --accent: #8f9cf0; --accent-soft: #252c48; --finding: #5cc095; --decision: #a990ee; --handover: #e39a55;
-    --gap: #ec7a87; --event: #9aa5b3; --doc: #8f9cf0; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f4f7; --panel: #ffffff; --raised: #f7f8fb; --rule: #dde1e8; --ink: #1d222b; --muted: #5e6776; --faint: #9aa2ae;
+    --accent: #5b47d6; --accent-soft: #ebe7fd; --finding: #23875e; --decision: #6d4fd0; --handover: #b9661c; --gap: #bf3a4b;
+    --event: #6b7483; --document: #2f65c4; --entity: #c4c9d3; --edge: rgba(70, 80, 100, .18); --edge-hot: rgba(91, 71, 214, .8);
+    color-scheme: light;
+  }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
-header { display: flex; align-items: center; gap: 24px; padding: 10px 20px; border-bottom: 1px solid var(--rule); background: var(--sheet); }
-.brand { font-weight: 650; letter-spacing: -0.01em; font-size: 16px; }
-.brand span { color: var(--accent); }
-nav { display: flex; gap: 4px; }
-nav button { background: none; border: 0; padding: 6px 10px; border-radius: 6px; color: var(--muted); font: inherit; cursor: pointer; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); display: flex; flex-direction: column; overflow: hidden; }
+header { display: flex; align-items: center; gap: 20px; padding: 8px 16px; border-bottom: 1px solid var(--rule); background: var(--panel); flex: none; }
+.brand { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+.brand svg { color: var(--accent); }
+nav { display: flex; gap: 2px; }
+nav button { background: none; border: 0; padding: 5px 10px; border-radius: 6px; color: var(--muted); font: inherit; cursor: pointer; }
 nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-#q { margin-left: auto; width: min(360px, 40vw); padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+#q { margin-left: auto; width: min(320px, 34vw); padding: 5px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; }
 #who { color: var(--muted); font-size: 13px; white-space: nowrap; }
-main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 50px); }
-aside { border-right: 1px solid var(--rule); overflow: auto; max-height: calc(100vh - 50px); padding: 12px 0; }
-section#view { overflow: auto; max-height: calc(100vh - 50px); padding: 24px 32px; }
-.ws { padding: 10px 16px 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+.shell { flex: 1; display: grid; grid-template-columns: 260px 1fr 440px; min-height: 0; }
+.shell.closed { grid-template-columns: 260px 1fr 0; }
+aside#tree { border-right: 1px solid var(--rule); overflow: auto; padding: 8px 0 24px; background: var(--panel); }
+#center { position: relative; overflow: auto; min-width: 0; }
+#reader { border-left: 1px solid var(--rule); background: var(--panel); overflow: auto; min-width: 0; }
+.shell.closed #reader { display: none; }
+
+/* tree */
+.ws { padding: 12px 14px 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
 .ws em { font-style: normal; font-weight: 400; color: var(--faint); }
-.entry { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 5px 16px 5px 24px; cursor: pointer; color: inherit; font: inherit; border-left: 3px solid transparent; }
-.entry:hover { background: var(--sheet); }
-.entry[aria-selected="true"] { background: var(--sheet); border-left-color: var(--accent); }
-.entry .p { font: 12px/1.4 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
-.entry .s { display: block; }
-.kind { display: inline-block; font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: 3px; color: #fff; margin-right: 6px; vertical-align: 1px; }
-.k-document { background: var(--doc); } .k-finding { background: var(--finding); } .k-decision { background: var(--decision); }
-.k-handover { background: var(--handover); } .k-runbook-gap { background: var(--gap); } .k-event { background: var(--event); }
-h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
-.meta { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-.meta code, td code { font: 12px var(--mono); }
-.body { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 18px 22px; white-space: pre-wrap; font: 13.5px/1.6 var(--mono); max-width: 92ch; }
-.links { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.links span { font: 12px var(--mono); padding: 2px 8px; border: 1px solid var(--rule); border-radius: 12px; color: var(--muted); }
-table { border-collapse: collapse; width: 100%; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 13px; }
-th { color: var(--muted); font-weight: 600; background: var(--paper); }
+.entry { display: flex; gap: 8px; width: 100%; text-align: left; border: 0; background: none; padding: 4px 14px; cursor: pointer; color: inherit; font: inherit; font-size: 13px; align-items: baseline; }
+.entry:hover { background: var(--raised); }
+.entry[aria-selected="true"] { background: var(--accent-soft); }
+.entry span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+.k-document { --k: var(--document); } .k-finding { --k: var(--finding); } .k-decision { --k: var(--decision); }
+.k-handover { --k: var(--handover); } .k-runbook-gap { --k: var(--gap); } .k-event { --k: var(--event); }
+.dot { background: var(--k); }
+
+/* graph */
+#graph { display: block; width: 100%; height: 100%; cursor: grab; }
+#graph.dragging { cursor: grabbing; }
+.legend { position: absolute; left: 14px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 88%, transparent); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); max-width: calc(100% - 28px); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.legend i.mcp { background: none; border: 2px solid var(--muted); }
+.legend i.ent { border-radius: 2px; background: var(--entity); }
+.focus { position: absolute; right: 14px; top: 12px; display: flex; gap: 6px; }
+.focus button { background: var(--panel); color: var(--muted); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+#tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px; box-shadow: 0 6px 24px rgba(0,0,0,.25); display: none; }
+#tip b { display: block; font-size: 13px; margin-bottom: 2px; }
+#tip small { color: var(--muted); }
+
+/* reader */
+.reader-head { position: sticky; top: 0; background: var(--panel); padding: 14px 20px 10px; border-bottom: 1px solid var(--rule); display: flex; gap: 8px; align-items: flex-start; }
+.reader-head h1 { font-size: 17px; line-height: 1.35; margin: 0; flex: 1; letter-spacing: -0.01em; }
+.close { background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 4px; }
+.reader-body { padding: 14px 20px 32px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; color: var(--k); background: color-mix(in srgb, var(--k) 16%, transparent); }
+.meta { color: var(--muted); font-size: 12.5px; margin: 6px 0 12px; }
+.meta code { font: 11.5px var(--mono); overflow-wrap: anywhere; }
+.client { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--rule); color: var(--ink); }
+.md { font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+.md h1, .md h2, .md h3 { font-size: 15px; margin: 18px 0 6px; }
+.md p { margin: 0 0 10px; }
+.md ul { padding-left: 20px; margin: 0 0 10px; }
+.md code { font: 12.5px var(--mono); background: var(--raised); padding: 1px 5px; border-radius: 4px; }
+.md pre { background: var(--raised); padding: 10px 12px; border-radius: 8px; overflow: auto; font: 12.5px/1.5 var(--mono); }
+.md pre code { background: none; padding: 0; }
+.md a, a.chip { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.chip { font: 11.5px var(--mono); padding: 2px 8px; border: 1px solid var(--rule); border-radius: 12px; color: var(--muted); background: none; cursor: pointer; text-decoration: none; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+h4 { font-size: 12px; color: var(--muted); font-weight: 600; margin: 22px 0 6px; }
+.back { display: block; width: 100%; text-align: left; background: var(--raised); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.back:hover { border-color: var(--accent); }
+.back small { display: block; color: var(--muted); font-size: 11.5px; }
+.hist { width: 100%; border-collapse: collapse; font-size: 12px; }
+.hist td { padding: 4px 6px 4px 0; border-bottom: 1px solid var(--rule); color: var(--muted); }
+.hist button { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
+
+/* pages */
+.page { padding: 24px 32px; max-width: 1100px; }
+.page h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.hint { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
+.day { font-size: 12px; color: var(--muted); font-weight: 600; margin: 20px 0 8px; }
+.event { display: grid; grid-template-columns: 52px 18px 1fr; gap: 6px; align-items: start; padding: 6px 0; cursor: pointer; border-radius: 6px; }
+.event:hover { background: var(--panel); }
+.event time { color: var(--faint); font: 12px var(--mono); padding-top: 2px; }
+.event .dot { margin-top: 7px; }
+.event small { display: block; color: var(--muted); }
+table.grid { border-collapse: collapse; width: 100%; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.grid th, .grid td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 13px; }
+.grid th { color: var(--muted); font-weight: 600; background: var(--raised); }
+.grid code { font: 12px var(--mono); }
 tr.click { cursor: pointer; } tr.click:hover td { background: var(--accent-soft); }
 .st-ok { color: var(--finding); } .st-refused, .st-error { color: var(--gap); }
-.rolled { color: var(--faint); text-decoration: line-through; }
-button.act { border: 1px solid var(--gap); color: var(--gap); background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font: inherit; }
-button.act:disabled { opacity: .4; cursor: default; }
+.rolled td { color: var(--faint); text-decoration: line-through; }
+button.act { border: 1px solid var(--gap); color: var(--gap); background: none; padding: 3px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; }
 button.primary { border: 0; background: var(--accent); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font: inherit; }
-textarea { width: 100%; max-width: 92ch; min-height: 320px; font: 13px/1.6 var(--mono); padding: 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); }
-.stats { display: flex; gap: 28px; margin: 4px 0 24px; flex-wrap: wrap; }
-.stats div b { display: block; font-size: 22px; font-weight: 650; }
-.stats div { color: var(--muted); font-size: 12px; }
-.hint { color: var(--muted); max-width: 70ch; }
+textarea { width: 100%; min-height: 320px; font: 13px/1.6 var(--mono); padding: 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); }
 .err { color: var(--gap); }
-.versions { margin-top: 20px; font-size: 13px; }
-.versions button { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
+.stats { display: flex; gap: 22px; padding: 0 14px 6px; font-size: 12px; color: var(--muted); }
+.stats b { display: block; font-size: 18px; color: var(--ink); font-weight: 650; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 800px) { main { grid-template-columns: 1fr; } aside { max-height: 40vh; border-right: 0; border-bottom: 1px solid var(--rule); } section#view { padding: 16px; } #q { width: 100%; } header { flex-wrap: wrap; } }
+@media (max-width: 1100px) { .shell, .shell.closed { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } aside#tree { display: none; } #reader { position: fixed; inset: 49px 0 0 auto; width: min(440px, 100vw); z-index: 5; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">agent<span>Brain</span></div>
+  <div class="brand">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.3 7.6 15.6 6.4M7.2 9.2l3.6 6.6M16.9 8.3l-3.7 7.6"/></svg>
+    agentBrain
+  </div>
   <nav>
-    <button data-tab="memory" aria-current="page">Memory</button>
+    <button data-tab="graph" aria-current="page">Graph</button>
+    <button data-tab="timeline">Timeline</button>
     <button data-tab="sessions">Sessions</button>
     <button data-tab="audit">Audit</button>
   </nav>
-  <input id="q" type="search" placeholder="Search notes and documents" aria-label="Search">
+  <input id="q" type="search" placeholder="Search the memory" aria-label="Search the memory">
   <div id="who"></div>
 </header>
-<main>
+<div class="shell closed" id="shell">
   <aside id="tree" aria-label="Workspaces"></aside>
-  <section id="view"></section>
-</main>
+  <main id="center"></main>
+  <section id="reader" aria-label="Note"></section>
+</div>
 <script>
 const qs = new URLSearchParams(location.search);
 const devUser = qs.get("dev_user");
-const $ = (s) => document.querySelector(s);
+const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-let me = null, current = null;
+const when = (iso) => iso ? iso.replace("T", " ").slice(0, 16) : "";
+const KINDS = ["finding", "decision", "handover", "runbook-gap", "event", "document"];
+let me = null, nodes = [], byPath = {}, current = null, tab = "graph";
 
 async function api(path, opts = {}) {
   const headers = {"content-type": "application/json", ...(devUser ? {"x-brain-dev-user": devUser} : {})};
@@ -96,130 +158,323 @@ async function api(path, opts = {}) {
   if (!r.ok) throw new Error(data.error || r.statusText);
   return data;
 }
-const kind = (k) => `<span class="kind k-${esc(k)}">${esc(k)}</span>`;
-const when = (iso) => iso ? iso.replace("T", " ").slice(0, 16) : "";
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const kindColor = (k) => css(k === "runbook-gap" ? "--gap" : `--${k}`) || css("--muted");
+const tag = (k) => `<span class="tag k-${esc(k)}">${esc(k)}</span>`;
+const clientName = (c) => c.includes("claude") ? "Claude Code" : c.includes("codex") ? "Codex" : c.includes("copilot") ? "Copilot"
+  : c === "agentgate" ? "AgentGate" : c === "console" ? "console" : c === "agentbrain" ? "agentBrain" : c;
+const isMcp = (c) => c.startsWith("agentbrain-mcp") || c.startsWith("dev");
 
-async function loadTree() {
-  const entries = await api("/api/tree");
-  const byWs = {};
-  for (const w of me.workspaces) byWs[w.workspace] = {title: w.title, items: []};
-  for (const e of entries) {
-    const ws = me.workspaces.map((w) => w.workspace).filter((w) => w === "/" ? !e.path.includes("/") : e.path.startsWith(w + "/"))
-      .sort((a, b) => b.length - a.length)[0] || "/";
-    (byWs[ws] ||= {title: ws, items: []}).items.push(e);
-  }
-  $("#tree").innerHTML = Object.entries(byWs).map(([ws, g]) => `
-    <div class="ws">${esc(ws)} <em>${esc(g.title)} · ${g.items.length}</em></div>
-    ${g.items.sort((a, b) => (a.kind === "document" ? 0 : 1) - (b.kind === "document" ? 0 : 1) || b.updated.localeCompare(a.updated))
-      .map((e) => `<button class="entry" data-path="${esc(e.path)}" aria-selected="${e.path === current}">
-        <span class="s">${kind(e.kind)}${esc(e.summary)}</span>
-        <span class="p">${esc(e.path.slice(ws === "/" ? 0 : ws.length + 1))} · ${esc(e.author)} · ${when(e.updated)}</span></button>`).join("")}`).join("");
+// ---- links: a link is another note (its path) or an entity: run:, ado:, airflow:, branch:, approval:, a URL
+function linkLabel(l) {
+  if (byPath[l]) return byPath[l].summary;
+  let m;
+  if ((m = /^run:run-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/.exec(l))) return `run ${m[3]}.${m[2]} ${m[4]}:${m[5]}`;
+  if ((m = /^airflow:(.+)$/.exec(l))) return `DAG ${m[1]}`;
+  if ((m = /^ado:(\d+)$/.exec(l))) return `ADO #${m[1]}`;
+  if ((m = /^branch:(.+)$/.exec(l))) return `branch ${m[1].replace(/^feature\//, "")}`;
+  try { if (/^https?:/.test(l)) { const u = new URL(l); return u.host.split(".")[0] + u.pathname.replace(/\/$/, "").slice(-38); } } catch {}
+  return l;
+}
+function linkHref(l) {
+  if (/^https?:/.test(l)) return l;
+  const m = /^run:(.+)$/.exec(l);
+  return m && me.run_url ? me.run_url.replace("{id}", encodeURIComponent(m[1])) : null;
 }
 
-async function showDoc(path, version) {
+// "subject: what was found" -> what was found; the subject is the cluster the note sits in
+const shortLabel = (s) => { const i = s.indexOf(": "); return i > 0 && i < 60 && s.length - i > 12 ? s.slice(i + 2) : s; };
+
+// ---- tree
+function renderTree() {
+  const groups = {};
+  for (const n of nodes) (groups[n.workspace] ||= []).push(n);
+  const s = me.stats, k = s.by_kind || {};
+  const notes = KINDS.filter((x) => x !== "document").reduce((a, x) => a + (k[x] || 0), 0);
+  $("#tree").innerHTML = `<div class="stats"><div><b>${notes}</b>notes</div><div><b>${k.document || 0}</b>documents</div><div><b>${s.sessions}</b>sessions</div></div>` +
+    Object.entries(groups).sort().map(([ws, items]) => `
+    <div class="ws">${esc(ws)} <em>${items.length}</em></div>
+    ${items.sort((a, b) => (a.kind === "document" ? 0 : 1) - (b.kind === "document" ? 0 : 1) || b.updated.localeCompare(a.updated))
+      .map((n) => `<button class="entry k-${esc(n.kind)}" data-path="${esc(n.path)}" aria-selected="${n.path === current}" title="${esc(n.summary)}">
+        <i class="dot"></i><span>${esc(n.summary)}</span></button>`).join("")}`).join("");
+}
+
+// ---- minimal markdown: headings, lists, code, bold, inline code, links
+function md(src) {
+  const blocks = String(src).split(/```/);
+  return blocks.map((b, i) => {
+    if (i % 2) return `<pre><code>${esc(b.replace(/^\w*\n/, ""))}</code></pre>`;
+    const inline = (t) => esc(t)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    const out = []; let list = false;
+    for (const line of b.split("\n")) {
+      const h = /^(#{1,4})\s+(.*)$/.exec(line), li = /^\s*[-*]\s+(.*)$/.exec(line);
+      if (!li && list) { out.push("</ul>"); list = false; }
+      if (h) out.push(`<h3>${inline(h[2])}</h3>`);
+      else if (li) { if (!list) { out.push("<ul>"); list = true; } out.push(`<li>${inline(li[1])}</li>`); }
+      else if (line.trim()) out.push(`<p>${inline(line)}</p>`);
+    }
+    if (list) out.push("</ul>");
+    return out.join("");
+  }).join("");
+}
+
+// ---- reader
+async function openNote(path, version) {
   current = path;
+  $("#shell").classList.remove("closed");
   document.querySelectorAll(".entry").forEach((b) => b.setAttribute("aria-selected", b.dataset.path === path));
+  graph?.select(path);
   const d = await api(`/api/doc?path=${encodeURIComponent(path)}${version ? `&version=${version}` : ""}`);
+  const n = byPath[path] || {};
+  const links = d.links || [];
+  const linkedHere = nodes.filter((x) => x.path !== path && (x.links || []).includes(path));
+  const shared = {};
+  for (const l of links) if (!byPath[l]) for (const x of nodes) if (x.path !== path && (x.links || []).includes(l)) (shared[l] ||= []).push(x);
   const isInstr = /(^|\/)(CORE|AGENTS)\.md$/.test(path);
-  $("#view").innerHTML = `
-    <h1>${kind(d.kind)}${esc(d.summary)}</h1>
-    <div class="meta"><code>${esc(d.path)}</code> · version ${d.version}${d.version !== d.latest_version ? ` of ${d.latest_version}` : ""} · ${esc(d.author)} · ${when(d.updated)}</div>
-    ${d.links?.length ? `<div class="links">${d.links.map((l) => `<span>${esc(l)}</span>`).join("")}</div>` : ""}
-    <div class="body">${esc(d.body)}</div>
-    ${isInstr && me.admin && d.version === d.latest_version ? `<p><button class="primary" id="edit">Edit instructions</button></p>` : ""}
-    ${isInstr && !me.admin ? `<p class="hint">Instruction files change only with an admin's approval.</p>` : ""}
-    <div class="versions"><b>History</b><table><tr><th>Version</th><th>By</th><th>Client</th><th>Session</th><th>When</th></tr>
-      ${d.history.map((v) => `<tr><td><button data-v="${v.version}">${v.version}${v.op === "rollback" ? " (rollback)" : ""}${v.deleted ? " · removed" : ""}</button></td>
-        <td>${esc(v.author)}</td><td>${esc(v.client)}</td><td><code>${esc(v.changeset_id)}</code></td><td>${when(v.at)}</td></tr>`).join("")}</table></div>`;
-  $("#view").querySelectorAll("[data-v]").forEach((b) => b.onclick = () => showDoc(path, +b.dataset.v));
-  const edit = $("#edit");
+  const backItem = (x, why) => `<button class="back" data-open="${esc(x.path)}"><span class="tag k-${esc(x.kind)}">${esc(x.kind)}</span> ${esc(x.summary)}
+    <small>${esc(x.author)} · ${esc(clientName(x.client))} · ${when(x.created)}${why ? ` · via ${esc(why)}` : ""}</small></button>`;
+  $("#reader").innerHTML = `
+    <div class="reader-head"><h1>${esc(d.summary)}</h1><button class="close" aria-label="Close note">×</button></div>
+    <div class="reader-body">
+      <div>${tag(d.kind)} <span class="client">${esc(clientName(d.client || n.client || ""))}</span></div>
+      <div class="meta">${esc(d.author)} · ${when(d.updated)} · version ${d.version}${d.version !== d.latest_version ? ` of ${d.latest_version}` : ""}<br><code>${esc(d.path)}</code></div>
+      ${links.length ? `<div class="chips">${links.map((l) => {
+        const href = linkHref(l);
+        return byPath[l] ? `<button class="chip" data-open="${esc(l)}">↳ ${esc(linkLabel(l).slice(0, 48))}</button>`
+          : href ? `<a class="chip" href="${esc(href)}" target="_blank" rel="noopener">${esc(linkLabel(l))}</a>`
+          : `<button class="chip" data-focus="${esc(l)}">${esc(l)}</button>`;
+      }).join("")}</div>` : ""}
+      <div class="md">${md(d.body)}</div>
+      ${isInstr && me.admin && d.version === d.latest_version ? `<p><button class="primary" id="edit">Edit instructions</button></p>` : ""}
+      ${linkedHere.length ? `<h4>Linked from</h4>${linkedHere.map((x) => backItem(x)).join("")}` : ""}
+      ${Object.keys(shared).length ? `<h4>Same subject</h4>${Object.entries(shared).map(([l, xs]) => xs.map((x) => backItem(x, linkLabel(l))).join("")).join("")}` : ""}
+      <h4>History</h4>
+      <table class="hist">${d.history.map((v) => `<tr><td><button data-v="${v.version}">v${v.version}</button>${v.op === "rollback" ? " rollback" : ""}${v.deleted ? " · removed" : ""}</td>
+        <td>${esc(v.author)}</td><td>${esc(clientName(v.client))}</td><td>${when(v.at)}</td></tr>`).join("")}</table>
+    </div>`;
+  const r = $("#reader");
+  $(".close", r).onclick = () => { current = null; $("#shell").classList.add("closed"); graph?.select(null); renderTree(); setTimeout(() => graph?.resize(), 0); };
+  r.querySelectorAll("[data-open]").forEach((b) => b.onclick = () => openNote(b.dataset.open));
+  r.querySelectorAll("[data-v]").forEach((b) => b.onclick = () => openNote(path, +b.dataset.v));
+  r.querySelectorAll("[data-focus]").forEach((b) => b.onclick = () => { show("graph"); graph?.select("e:" + b.dataset.focus); });
+  const edit = $("#edit", r);
   if (edit) edit.onclick = () => {
-    $("#view").innerHTML = `<h1>Edit ${esc(path)}</h1><p class="hint">Every agent that enters this workspace follows this file. Saving is the approval.</p>
+    $(".reader-body", r).innerHTML = `<p class="hint">Every agent that enters here follows this file. Saving is the approval.</p>
       <textarea id="txt">${esc(d.body)}</textarea><p><button class="primary" id="save">Save version ${d.version + 1}</button> <span id="msg"></span></p>`;
     $("#save").onclick = async () => {
       try { await api("/api/instructions", {method: "PUT", body: JSON.stringify({path, body: $("#txt").value, base_version: d.version})});
-        await loadTree(); showDoc(path); } catch (e) { $("#msg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+        await load(); openNote(path); } catch (e) { $("#msg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
     };
   };
+  setTimeout(() => graph?.resize(), 0);
 }
 
-function home() {
-  const s = me.stats, k = s.by_kind || {};
-  const notes = ["finding", "decision", "handover", "runbook-gap", "event"].reduce((n, x) => n + (k[x] || 0), 0);
-  $("#view").innerHTML = `<h1>Shared memory</h1>
-    <p class="hint">What agents and people found, decided and handed over — readable by the next session, whatever harness it runs in. Pick a note or document on the left.</p>
-    <div class="stats">
-      <div><b>${notes}</b>notes</div><div><b>${k.document || 0}</b>documents</div>
-      <div><b>${s.sessions}</b>sessions</div><div><b>${s.unread_notes}</b>notes nobody has read yet</div>
-    </div>
-    <h3>Calls by client</h3>
-    <table><tr><th>Client</th><th>Calls</th></tr>${Object.entries(s.calls_by_client || {}).map(([c, n]) => `<tr><td>${esc(c)}</td><td>${n}</td></tr>`).join("")}</table>`;
+// ---- graph: notes, the entities they link (runs, tickets, DAGs, branches), force layout on a canvas
+let graph = null;
+function Graph(canvas, tip) {
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, dpr = 1, view = {x: 0, y: 0, k: 1}, sel = null, hover = null, alpha = 1, raf = 0;
+  let drag = null, pan = null, moved = false;
+  const N = [], E = [], idx = {};
+  const add = (n) => { idx[n.id] = n; N.push(n); return n; };
+  for (const n of nodes) add({id: n.path, note: n, r: n.kind === "document" ? 9 : 7 + Math.min(4, n.reads || 0) * 0.6,
+    x: (Math.random() - .5) * 400, y: (Math.random() - .5) * 300, vx: 0, vy: 0});
+  for (const n of nodes) for (const l of n.links || []) {
+    if (idx[l]) { E.push([idx[n.path], idx[l]]); continue; }
+    const id = "e:" + l;
+    const e = idx[id] || add({id, entity: l, r: 4, x: (Math.random() - .5) * 400, y: (Math.random() - .5) * 300, vx: 0, vy: 0});
+    E.push([idx[n.path], e]);
+  }
+  const deg = {}; for (const [a, b] of E) { deg[a.id] = (deg[a.id] || 0) + 1; deg[b.id] = (deg[b.id] || 0) + 1; }
+  for (const n of N) if (n.entity) n.r = 3.5 + Math.min(5, (deg[n.id] || 1) * 0.9);
+  const nb = (id) => { const s = new Set([id]); for (const [a, b] of E) { if (a.id === id) s.add(b.id); if (b.id === id) s.add(a.id); } return s; };
+
+  function step() {
+    const k2 = 9000;
+    for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+      const a = N[i], b = N[j]; let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy || .01;
+      if (d2 > 160000) continue;
+      const f = k2 / d2 * alpha, d = Math.sqrt(d2); dx /= d; dy /= d;
+      a.vx += dx * f; a.vy += dy * f; b.vx -= dx * f; b.vy -= dy * f;
+    }
+    for (const [a, b] of E) {
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || .01, want = b.entity ? 95 : 140, f = (d - want) * 0.02 * alpha;
+      a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
+    }
+    for (const n of N) {
+      n.vx -= n.x * 0.004 * alpha; n.vy -= n.y * 0.004 * alpha;
+      if (n === drag) { n.vx = n.vy = 0; continue; }
+      n.x += n.vx *= 0.55; n.y += n.vy *= 0.55;
+    }
+    alpha = Math.max(0.02, alpha * 0.985);
+  }
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.translate(W / 2 + view.x, H / 2 + view.y); ctx.scale(view.k, view.k);
+    const hot = sel || hover ? nb((hover || sel)) : null;
+    ctx.lineWidth = 1 / view.k;
+    for (const [a, b] of E) {
+      const on = hot && hot.has(a.id) && hot.has(b.id) && (a.id === (hover || sel) || b.id === (hover || sel));
+      ctx.strokeStyle = on ? css("--edge-hot") : css("--edge"); ctx.lineWidth = (on ? 1.6 : 1) / view.k;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    const ink = css("--ink"), muted = css("--muted"), bg = css("--bg");
+    for (const n of N) {
+      const dim = hot && !hot.has(n.id);
+      ctx.globalAlpha = dim ? 0.18 : 1;
+      ctx.beginPath();
+      if (n.entity) { const s = n.r; ctx.rect(n.x - s, n.y - s, s * 2, s * 2); ctx.fillStyle = css("--entity"); ctx.fill(); }
+      else {
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fillStyle = kindColor(n.note.kind); ctx.fill();
+        if (isMcp(n.note.client)) { ctx.lineWidth = 2 / view.k; ctx.strokeStyle = bg; ctx.stroke(); ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, 0, Math.PI * 2); ctx.strokeStyle = kindColor(n.note.kind); ctx.stroke(); }
+        if (n.id === sel) { ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6, 0, Math.PI * 2); ctx.lineWidth = 2 / view.k; ctx.strokeStyle = css("--accent"); ctx.stroke(); }
+      }
+      const showLabel = n.entity ? (view.k > 0.55 || (hot && hot.has(n.id))) : (N.length < 80 || view.k > 1.1 || (hot && hot.has(n.id)));
+      if (showLabel && !dim) {
+        const text = n.entity ? linkLabel(n.entity) : shortLabel(n.note.summary);
+        ctx.font = `${(n.entity ? 10.5 : 12) / view.k}px ${css("--sans")}`.replace(/\s+/g, " ");
+        ctx.fillStyle = n.entity ? muted : ink; ctx.textAlign = "center";
+        const max = hot && hot.has(n.id) ? 70 : 34, t = text.length > max ? text.slice(0, max - 1) + "…" : text;
+        ctx.fillText(t, n.x, n.y + n.r + 13 / view.k);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  let fitted = false;
+  function loop() { if (alpha > 0.021 || drag) step(); if (!fitted && alpha < 0.05) { fit(); fitted = true; } draw(); raf = requestAnimationFrame(loop); }
+  for (let i = 0; i < 220; i++) step();
+  alpha = 0.3;
+
+  const toWorld = (ev) => { const r = canvas.getBoundingClientRect(); return {x: (ev.clientX - r.left - W / 2 - view.x) / view.k, y: (ev.clientY - r.top - H / 2 - view.y) / view.k}; };
+  const pick = (p) => { let best = null, bd = 1e9; for (const n of N) { const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < n.r + 6 / view.k && d < bd) { best = n; bd = d; } } return best; };
+  canvas.onpointerdown = (ev) => { const n = pick(toWorld(ev)); moved = false; canvas.setPointerCapture(ev.pointerId);
+    if (n) { drag = n; alpha = Math.max(alpha, 0.3); } else pan = {x: ev.clientX - view.x, y: ev.clientY - view.y}; canvas.classList.add("dragging"); };
+  canvas.onpointermove = (ev) => {
+    const p = toWorld(ev);
+    if (drag) { drag.x = p.x; drag.y = p.y; moved = true; return; }
+    if (pan) { view.x = ev.clientX - pan.x; view.y = ev.clientY - pan.y; moved = true; return; }
+    const n = pick(p); hover = n ? n.id : null; canvas.style.cursor = n ? "pointer" : "grab";
+    if (n) {
+      const r = canvas.getBoundingClientRect();
+      tip.style.display = "block"; tip.style.left = Math.min(ev.clientX - r.left + 14, W - 330) + "px"; tip.style.top = ev.clientY - r.top + 14 + "px";
+      tip.innerHTML = n.entity ? `<b>${esc(n.entity)}</b><small>${deg[n.id] || 0} note(s) link it</small>`
+        : `<b>${esc(n.note.summary)}</b><small>${esc(n.note.kind)} · ${esc(n.note.author)} · ${esc(clientName(n.note.client))} · ${when(n.note.created)}</small>`;
+    } else tip.style.display = "none";
+  };
+  canvas.onpointerup = (ev) => {
+    canvas.classList.remove("dragging");
+    const n = drag; drag = null; pan = null;
+    if (!moved) { const hit = n || pick(toWorld(ev)); if (hit && hit.note) openNote(hit.id); else if (hit) select(hit.id); else select(null); }
+  };
+  canvas.onpointerleave = () => { hover = null; tip.style.display = "none"; };
+  canvas.onwheel = (ev) => { ev.preventDefault(); const r = canvas.getBoundingClientRect();
+    const mx = ev.clientX - r.left - W / 2, my = ev.clientY - r.top - H / 2, k = Math.min(4, Math.max(0.25, view.k * Math.exp(-ev.deltaY * 0.0015)));
+    view.x = mx - (mx - view.x) * k / view.k; view.y = my - (my - view.y) * k / view.k; view.k = k; };
+  function resize() { const r = canvas.parentElement.getBoundingClientRect(); dpr = devicePixelRatio || 1; W = r.width; H = r.height;
+    canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + "px"; canvas.style.height = H + "px"; }
+  function fit() { if (!N.length) return; const xs = N.map((n) => n.x), ys = N.map((n) => n.y);
+    const w = Math.max(...xs) - Math.min(...xs) + 120, h = Math.max(...ys) - Math.min(...ys) + 120;
+    view.k = Math.min(1.6, Math.max(0.3, Math.min(W / (w + 160), H / (h + 80)))); view.x = -(Math.max(...xs) + Math.min(...xs)) / 2 * view.k; view.y = -(Math.max(...ys) + Math.min(...ys)) / 2 * view.k; }
+  function select(id) { sel = id; const n = idx[id]; if (n && n.entity) { view.x = -n.x * view.k; view.y = -n.y * view.k; } }
+  resize(); fit(); loop();
+  return {resize, fit, select, stop: () => cancelAnimationFrame(raf)};
 }
 
-async function sessions() {
+function showGraph() {
+  $("#center").innerHTML = `<canvas id="graph" aria-label="Graph of notes and what they link"></canvas><div id="tip"></div>
+    <div class="focus"><button id="fit">Fit</button></div>
+    <div class="legend">${KINDS.map((k) => `<span><i style="background:${kindColor(k)}"></i>${k}</span>`).join("")}
+      <span><i class="mcp"></i>written from an engineer's assistant (Claude Code, Codex)</span><span><i class="ent"></i>run, ticket, DAG, branch</span></div>`;
+  graph?.stop();
+  graph = Graph($("#graph"), $("#tip"));
+  $("#fit").onclick = () => graph.fit();
+  if (current) graph.select(current);
+}
+
+// ---- timeline
+function showTimeline() {
+  const items = [...nodes].sort((a, b) => b.created.localeCompare(a.created));
+  let day = "";
+  $("#center").innerHTML = `<div class="page"><h1>Timeline</h1><p class="hint">What the memory learned, in order — and through which assistant.</p>
+    ${items.map((n) => { const d = n.created.slice(0, 10), head = d !== day ? `<div class="day">${d}</div>` : ""; day = d;
+      return `${head}<div class="event k-${esc(n.kind)}" data-open="${esc(n.path)}"><time>${n.created.slice(11, 16)}</time><i class="dot"></i>
+        <div>${esc(n.summary)}<small>${esc(n.kind)} · ${esc(n.author)} · ${esc(clientName(n.client))}</small></div></div>`; }).join("")}</div>`;
+  $("#center").querySelectorAll("[data-open]").forEach((e) => e.onclick = () => openNote(e.dataset.open));
+}
+
+// ---- sessions and audit
+async function showSessions() {
   const rows = await api("/api/sessions");
-  $("#view").innerHTML = `<h1>Sessions</h1><p class="hint">Every session is one change across the whole memory. Roll one back and everything it wrote goes back to how it was.</p>
-    <table><tr><th>Started</th><th>Who</th><th>Client</th><th>Task</th><th>Changes</th><th></th></tr>
+  $("#center").innerHTML = `<div class="page"><h1>Sessions</h1><p class="hint">Every session is one change across the whole memory. Roll one back and everything it wrote goes back to how it was.</p>
+    <table class="grid"><tr><th>Started</th><th>Who</th><th>Client</th><th>Task</th><th>Changes</th><th></th></tr>
     ${rows.map((r) => `<tr class="click ${r.rolled_back_at ? "rolled" : ""}" data-cid="${esc(r.id)}"><td>${when(r.started_at)}</td><td>${esc(r.user_id)}</td>
-      <td>${esc(r.client)}</td><td>${esc(r.task)}${r.rollback_of ? ` <code>${esc(r.rollback_of)}</code>` : ""}</td><td>${r.changes}</td>
+      <td>${esc(clientName(r.client))}</td><td>${esc(r.task)}</td><td>${r.changes}</td>
       <td>${r.rolled_back_at ? `rolled back by ${esc(r.rolled_back_by)}` : (r.changes && r.user_id !== "agentbrain" && (r.user_id === me.user || me.admin) && !r.rollback_of
-        ? `<button class="act" data-rb="${esc(r.id)}">Roll back</button>` : "")}</td></tr>`).join("")}</table>`;
-  $("#view").querySelectorAll("tr[data-cid]").forEach((tr) => tr.onclick = (ev) => { if (!ev.target.dataset.rb) session(tr.dataset.cid); });
-  $("#view").querySelectorAll("[data-rb]").forEach((b) => b.onclick = async () => {
+        ? `<button class="act" data-rb="${esc(r.id)}">Roll back</button>` : "")}</td></tr>`).join("")}</table></div>`;
+  $("#center").querySelectorAll("tr[data-cid]").forEach((tr) => tr.onclick = (ev) => { if (!ev.target.dataset.rb) showSession(tr.dataset.cid); });
+  $("#center").querySelectorAll("[data-rb]").forEach((b) => b.onclick = async () => {
     if (!confirm(`Roll back ${b.dataset.rb}? Everything it wrote goes back to how it was before.`)) return;
     b.disabled = true;
-    try { await api(`/api/sessions/${b.dataset.rb}/rollback`, {method: "POST"}); await loadTree(); sessions(); }
+    try { await api(`/api/sessions/${b.dataset.rb}/rollback`, {method: "POST"}); await load(); showSessions(); }
     catch (e) { alert(e.message); b.disabled = false; }
   });
 }
-
-async function session(cid) {
+async function showSession(cid) {
   const s = await api(`/api/sessions/${cid}`);
-  $("#view").innerHTML = `<h1>${esc(s.task)}</h1><div class="meta"><code>${esc(s.id)}</code> · ${esc(s.user_id)} · ${esc(s.client)} · ${when(s.started_at)}
-    ${s.rolled_back_at ? ` · rolled back by ${esc(s.rolled_back_by)}` : ""}</div>
-    <table><tr><th>Path</th><th>Kind</th><th>Version</th><th>What</th></tr>
-    ${s.versions.map((v) => `<tr class="click" data-path="${esc(v.path)}" data-v="${v.version}"><td><code>${esc(v.path)}</code></td><td>${kind(v.kind)}</td>
-      <td>${v.version}${v.op === "rollback" ? " (rollback)" : ""}${v.deleted ? " · removed" : ""}</td><td>${esc(v.summary)}</td></tr>`).join("")}</table>
-    ${s.hidden ? `<p class="hint">${s.hidden} change(s) in workspaces you cannot read.</p>` : ""}`;
-  $("#view").querySelectorAll("tr[data-path]").forEach((tr) => tr.onclick = () => showDoc(tr.dataset.path, +tr.dataset.v));
+  $("#center").innerHTML = `<div class="page"><h1>${esc(s.task)}</h1><p class="hint"><code>${esc(s.id)}</code> · ${esc(s.user_id)} · ${esc(clientName(s.client))} · ${when(s.started_at)}
+    ${s.rolled_back_at ? ` · rolled back by ${esc(s.rolled_back_by)}` : ""}</p>
+    <table class="grid"><tr><th>Kind</th><th>What</th><th>Version</th></tr>
+    ${s.versions.map((v) => `<tr class="click" data-path="${esc(v.path)}" data-v="${v.version}"><td>${tag(v.kind)}</td><td>${esc(v.summary)}</td>
+      <td>${v.version}${v.op === "rollback" ? " (rollback)" : ""}${v.deleted ? " · removed" : ""}</td></tr>`).join("")}</table></div>`;
+  $("#center").querySelectorAll("tr[data-path]").forEach((tr) => tr.onclick = () => openNote(tr.dataset.path, +tr.dataset.v));
 }
-
-async function audit() {
+async function showAudit() {
   const rows = await api("/api/audit");
-  $("#view").innerHTML = `<h1>Audit</h1><p class="hint">Every call, by every client: who, through what, with which arguments, and what happened.</p>
-    <table><tr><th>When</th><th>Who</th><th>Client</th><th>Tool</th><th>Status</th><th>Arguments</th></tr>
-    ${rows.map((r) => `<tr><td>${when(r.at)}</td><td>${esc(r.user_id)}</td><td>${esc(r.client)}</td><td><code>${esc(r.tool)}</code></td>
+  $("#center").innerHTML = `<div class="page"><h1>Audit</h1><p class="hint">Every call by every client: who, through what, with which arguments, and what happened.</p>
+    <table class="grid"><tr><th>When</th><th>Who</th><th>Client</th><th>Tool</th><th>Status</th><th>Arguments</th></tr>
+    ${rows.map((r) => `<tr><td>${when(r.at)}</td><td>${esc(r.user_id)}</td><td>${esc(clientName(r.client || ""))}</td><td><code>${esc(r.tool)}</code></td>
       <td class="st-${esc(r.status)}">${esc(r.status)}${r.error ? `<br><small>${esc(r.error)}</small>` : ""}</td>
-      <td><code>${esc(JSON.stringify(r.args)).slice(0, 240)}</code></td></tr>`).join("")}</table>`;
+      <td><code>${esc(JSON.stringify(r.args)).slice(0, 200)}</code></td></tr>`).join("")}</table></div>`;
 }
-
 async function search(q) {
   const hits = await api(`/api/search?q=${encodeURIComponent(q)}`);
-  $("#view").innerHTML = `<h1>Search: ${esc(q)}</h1>${hits.length ? "" : `<p class="hint">Nothing matches. Try the service, job or ticket id.</p>`}
-    <table>${hits.map((h) => `<tr class="click" data-path="${esc(h.path)}"><td>${kind(h.kind)}<b>${esc(h.summary)}</b><br><code>${esc(h.path)}</code> · ${esc(h.author)} · ${when(h.updated)}<br>
-      <small>${esc(h.snippet)}</small></td></tr>`).join("")}</table>`;
-  $("#view").querySelectorAll("tr[data-path]").forEach((tr) => tr.onclick = () => showDoc(tr.dataset.path));
+  $("#center").innerHTML = `<div class="page"><h1>${esc(q)}</h1>${hits.length ? "" : `<p class="hint">Nothing matches. Try the service, job or ticket id.</p>`}
+    ${hits.map((h) => `<button class="back k-${esc(h.kind)}" data-open="${esc(h.path)}">${tag(h.kind)} ${esc(h.summary)}
+      <small>${esc(h.author)} · ${esc(clientName(h.client || ""))} · ${when(h.updated)}</small><small>${esc(h.snippet)}</small></button>`).join("")}</div>`;
+  $("#center").querySelectorAll("[data-open]").forEach((b) => b.onclick = () => openNote(b.dataset.open));
 }
 
-function tab(name) {
+function show(name) {
+  tab = name;
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.tab === name ? "page" : "false"));
-  const fail = (e) => $("#view").innerHTML = `<p class="err">${esc(e.message)}</p>`;
-  if (name === "memory") (current ? showDoc(current) : Promise.resolve(home())).catch(fail);
-  if (name === "sessions") sessions().catch(fail);
-  if (name === "audit") audit().catch(fail);
+  const fail = (e) => $("#center").innerHTML = `<p class="err page">${esc(e.message)}</p>`;
+  if (name !== "graph") { graph?.stop(); graph = null; }
+  if (name === "graph") showGraph();
+  if (name === "timeline") showTimeline();
+  if (name === "sessions") showSessions().catch(fail);
+  if (name === "audit") showAudit().catch(fail);
 }
 
-document.querySelectorAll("nav button").forEach((b) => b.onclick = () => tab(b.dataset.tab));
-$("#tree").onclick = (ev) => { const b = ev.target.closest(".entry"); if (b) { tab("memory"); showDoc(b.dataset.path).catch((e) => alert(e.message)); } };
-$("#q").onkeydown = (ev) => { if (ev.key === "Enter" && ev.target.value.trim()) search(ev.target.value.trim()).catch((e) => alert(e.message)); };
+async function load() {
+  me = await api("/api/me");
+  nodes = (await api("/api/graph")).nodes;
+  byPath = Object.fromEntries(nodes.map((n) => [n.path, n]));
+  $("#who").textContent = `${me.user}${me.admin ? " · admin" : ""}`;
+  renderTree();
+}
+
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => show(b.dataset.tab));
+$("#tree").onclick = (ev) => { const b = ev.target.closest(".entry"); if (b) openNote(b.dataset.path).catch((e) => alert(e.message)); };
+$("#q").onkeydown = (ev) => { if (ev.key === "Enter" && ev.target.value.trim()) { graph?.stop(); graph = null; search(ev.target.value.trim()).catch((e) => alert(e.message)); } };
+addEventListener("resize", () => graph?.resize());
 
 (async () => {
-  try {
-    me = await api("/api/me");
-    $("#who").textContent = `${me.user}${me.admin ? " · admin" : ""}`;
-    await loadTree();
-    home();
-  } catch (e) { $("#view").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  try { await load(); show("graph"); }
+  catch (e) { $("#center").innerHTML = `<p class="err page">${esc(e.message)}</p>`; }
 })();
 </script>
 </body>

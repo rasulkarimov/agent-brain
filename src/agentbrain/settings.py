@@ -62,6 +62,7 @@ class Settings:
     port: int = 8790  # MCP and the platform API
     console_port: int = 8791  # console, behind oauth2-proxy
     allowed_hosts: tuple[str, ...] = ()
+    run_url: str = ""  # where a run:<id> link opens, with {id}, e.g. AgentGate's console
 
     @classmethod
     def from_env(cls, env: os._Environ[str] | dict[str, str] = os.environ) -> Settings:
@@ -87,6 +88,7 @@ class Settings:
             host=env.get("BRAIN_HOST", cls.host),
             port=int(env.get("BRAIN_PORT", cls.port)),
             console_port=int(env.get("BRAIN_CONSOLE_PORT", cls.console_port)),
+            run_url=env.get("BRAIN_RUN_URL", ""),
             allowed_hosts=tuple(h for h in env.get("BRAIN_ALLOWED_HOSTS", "").split(",") if h),
         )
 

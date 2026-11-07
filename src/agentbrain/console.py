@@ -43,7 +43,7 @@ def create_console(settings: Settings, store: Store) -> Starlette:
     async def me(request: Request) -> JSONResponse:
         async def fn(c: Caller) -> dict[str, Any]:
             return {"user": c.user, "admin": c.admin, "groups": sorted(c.groups), "workspaces": await store.readable(c),
-                    "stats": await store.stats()}
+                    "stats": await store.stats(), "run_url": settings.run_url}
         return await handle(request, "me", fn)
 
     async def tree(request: Request) -> JSONResponse:
@@ -58,6 +58,9 @@ def create_console(settings: Settings, store: Store) -> Starlette:
             d["history"] = await store.history(c, q["path"])
             return d
         return await handle(request, "read", fn)
+
+    async def graph(request: Request) -> JSONResponse:
+        return await handle(request, "graph", lambda c: store.graph(c))
 
     async def search(request: Request) -> JSONResponse:
         return await handle(request, "search", lambda c: store.search(c, request.query_params.get("q", ""), limit=30))
@@ -88,7 +91,7 @@ def create_console(settings: Settings, store: Store) -> Starlette:
 
     return Starlette(routes=[
         Route("/", index), Route("/healthz", healthz),
-        Route("/api/me", me), Route("/api/tree", tree), Route("/api/doc", doc), Route("/api/search", search),
+        Route("/api/me", me), Route("/api/tree", tree), Route("/api/doc", doc), Route("/api/search", search), Route("/api/graph", graph),
         Route("/api/sessions", sessions), Route("/api/sessions/{cid}", session),
         Route("/api/sessions/{cid}/rollback", rollback, methods=["POST"]),
         Route("/api/instructions", instructions, methods=["PUT"]), Route("/api/audit", audit),

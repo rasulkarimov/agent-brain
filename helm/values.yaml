@@ -11,6 +11,8 @@ oidc:
   issuerUrl: https://keycloak.example.com/auth/realms/example
   ingressCidr: ""               # Keycloak's address, when it sits behind an ingress outside the namespace
 adminGroup: agentbrain_admin
+# Where a run:<id> link in a note opens ({id}); empty = not a link.
+runUrl: ""
 # Workspaces created at start: name, title, readers and writers ("*" = anyone signed in, group names, "user:<id>").
 workspaces:
   - {name: team/dataplatform, title: Data Platform team, readers: ["*"], writers: ["*"]}

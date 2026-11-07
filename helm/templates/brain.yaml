@@ -28,6 +28,7 @@ spec:
             - {name: BRAIN_ADMIN_GROUP, value: {{ .Values.adminGroup | quote }}}
             - {name: BRAIN_ALLOWED_HOSTS, value: "{{ .Values.hostname }},agentbrain:*,agentbrain.{{ .Release.Namespace }}.svc.cluster.local:*"}
             - {name: BRAIN_WORKSPACES, value: {{ toJson .Values.workspaces | quote }}}
+            - {name: BRAIN_RUN_URL, value: {{ .Values.runUrl | quote }}}
             - {name: SSL_CERT_FILE, value: /etc/ca-bundle/ca.crt}
             - name: DATABASE_URL
               valueFrom: {secretKeyRef: {name: {{ .Values.secretName }}, key: DATABASE_URL}}

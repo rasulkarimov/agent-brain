@@ -4,3 +4,4 @@ oidc:
   issuerUrl: https://dataplatform-keycloak.presight.ai/auth/realms/dataplatform
   ingressCidr: 10.119.95.51/32
 adminGroup: agentgate_admin
+runUrl: "https://agentgate.intdev.presight.ai/#runs/{id}"

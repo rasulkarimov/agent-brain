@@ -317,23 +317,40 @@ class Store:
         doc = await self._doc(path)
         if doc is None or (doc["deleted"] and version is None):
             raise BrainError(f"nothing at {path!r}; brain_tree shows what there is")
-        body, summary, at_version, author = doc["body"], doc["summary"], doc["version"], doc["author"]
+        body, summary, at_version, author, client = doc["body"], doc["summary"], doc["version"], doc["author"], doc["client"]
         if version is not None:
             async with self.engine.connect() as conn:
                 v = (await conn.execute(select(versions).where(versions.c.document_id == doc["id"],
                                                                versions.c.version == version))).mappings().first()
             if v is None:
                 raise BrainError(f"{path} has versions 1..{doc['version']}")
-            body, summary, at_version, author = v["body"], v["summary"], v["version"], v["author"]
+            body, summary, at_version, author, client = v["body"], v["summary"], v["version"], v["author"], v["client"]
         async with self.engine.begin() as conn:
             await conn.execute(update(documents).where(documents.c.id == doc["id"]).values(reads=documents.c.reads + 1))
         text = section_of(body, section) if section else body
         out: dict[str, Any] = {"path": path, "kind": doc["kind"], "summary": summary, "version": at_version,
-                               "latest_version": doc["version"], "author": author, "links": doc["links"],
+                               "latest_version": doc["version"], "author": author, "client": client, "links": doc["links"],
                                "updated": doc["updated_at"].isoformat(timespec="minutes"), "body": text}
         if len(body) > 6000 and not section:
             out["outline"] = outline(body)
         return out
+
+    async def graph(self, caller: Caller) -> dict[str, Any]:
+        """Every readable note and document with its links: the console draws the graph and the backlinks from it."""
+        q = select(documents.c.path, documents.c.kind, documents.c.summary, documents.c.author, documents.c.client,
+                   documents.c.links, documents.c.updated_at, documents.c.created_at, documents.c.workspace,
+                   documents.c.changeset_id, documents.c.reads).where(documents.c.deleted.is_(False))
+        async with self.engine.connect() as conn:
+            rows = (await conn.execute(q)).mappings().all()
+        out = []
+        for r in rows:
+            if await self.can(caller, r["workspace"], "read"):
+                out.append({"path": r["path"], "kind": r["kind"], "summary": r["summary"], "author": r["author"],
+                            "client": r["client"], "links": r["links"], "workspace": r["workspace"] or "/",
+                            "session": r["changeset_id"], "reads": r["reads"],
+                            "created": r["created_at"].isoformat(timespec="seconds"),
+                            "updated": r["updated_at"].isoformat(timespec="seconds")})
+        return {"nodes": out}
 
     async def history(self, caller: Caller, path: str) -> list[dict[str, Any]]:
         path = clean_path(path)
@@ -373,7 +390,7 @@ class Store:
             if not await self.can(caller, r["workspace"], "read"):
                 continue
             out.append({"path": r["path"], "kind": r["kind"], "summary": r["summary"], "author": r["author"],
-                        "updated": r["updated_at"].isoformat(timespec="minutes"), "links": r["links"],
+                        "client": r["client"], "updated": r["updated_at"].isoformat(timespec="minutes"), "links": r["links"],
                         "snippet": snippet(r["body"], words)})
             if len(out) >= limit:
                 break

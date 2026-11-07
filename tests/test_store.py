@@ -28,7 +28,7 @@ async def test_a_note_written_in_one_session_is_found_by_the_next(store):
     assert s2["session"] != s1["session"]
     assert any(r["path"] == w["path"] for r in s2["related"])
     note = await store.read(BORIS, w["path"])
-    assert note["author"] == "anna" and note["links"] == ["ado:4512"]
+    assert note["author"] == "anna" and note["client"] == "claude-code" and note["links"] == ["ado:4512"]
 
 
 async def test_rights_follow_groups_and_personal_workspaces(store):
