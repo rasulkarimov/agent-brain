@@ -10,8 +10,11 @@ Models and harnesses change every month; the memory and the tools around them st
 
 ## What it does
 
-- **Notes, not chat logs.** Short Markdown notes — `finding`, `decision`, `handover`, `runbook-gap`, `event` — with scope, author, links and versions.
-- **Progressive disclosure.** An agent starts with `brain_tree` (paths and one-line summaries) and reads bodies on demand, so the prompt does not grow with the memory.
+- **Workspaces of documents and notes, not chat logs.** Living documents (project state, known issues, runbooks) and short notes — `finding`, `decision`, `handover`, `runbook-gap`, `event` — with author, links and rights per workspace.
+- **One session, one change.** Every session is a changeset across the whole memory: reviewed and rolled back as one, however many documents it touched.
+- **Instructions in the memory.** On connect an agent gets the core (purpose, priorities, limits) and the rules of the workspace it enters — the same for every harness. Instruction files change only with an approval.
+- **Progressive disclosure.** An agent starts with the tree (paths and one-line summaries) and reads bodies or single sections on demand, so the prompt does not grow with the memory.
+- **Distill.** Notes are turned into documents per workspace on a schedule; repeated gaps become proposed skill changes, checked on the bench.
 - **The platform writes facts, the agent writes conclusions.** Approvals, merge requests and finished runs are recorded by the platforms that see them (`brain_event`), deterministically; the model writes only findings and decisions, at set moments.
 - **Handover in one step.** `brain_handover` puts a note in a colleague's scope; their next session starts from it.
 - **Governed.** Keycloak sign-in (OAuth, no token passthrough), scopes from groups, append-only versions, rollback, redaction of secrets on write, every call in the audit log.
