@@ -204,6 +204,35 @@ const shot = (slide, file, x, y, w, name) => {
   });
 }
 
+// 7b — for clients
+{
+  const s = pres.addSlide({ masterName: "CONTENT" });
+  s.addText("For clients: government entities putting agents to work", { placeholder: "title" });
+  const facts = [["2027", "Abu Dhabi's target: the world's first fully AI-native government"], ["50%", "UAE federal target: government services on agentic AI within two years"]];
+  facts.forEach(([n, t], i) => {
+    const x = 0.5 + i * 2.25;
+    card(s, x, 1.1, 2.1, 1.45, `fact-${i}`);
+    T(s, n, { x: x + 0.15, y: 1.18, w: 1.8, h: 0.6, fontSize: 30, bold: true, color: HEX.violet, fontFace: "Arial" });
+    T(s, t, { x: x + 0.15, y: 1.8, w: 1.85, h: 0.7, fontSize: 11, color: HEX.muted });
+  });
+  T(s, "Every AI system must run within frameworks that define ownership, oversight and monitoring. How an entity shows what its agents knew, who decided and why, and how a wrong step is undone — across vendors and models — is left to each entity.",
+    { x: 0.5, y: 2.7, w: 4.35, h: 1.2, fontSize: 12 });
+  T(s, "Sources: DGE, Abu Dhabi Media Office, Dubai Media Office (official releases)", { x: 0.5, y: 4.65, w: 4.35, h: 0.3, fontSize: 10, color: HEX.faint });
+  const offers = [
+    ["Government and regulated entities", "Memory for their agents, any vendor or model, in their own sovereign cloud — author, audit, rollback", HEX.violet],
+    ["Inside Presight's AI products", "The memory of a case for analysts and investigators, with rights per case — to validate with product teams", HEX.green],
+    ["Engineering teams on client sites", "What a site learns stays on that site and survives shift changes", HEX.blue],
+  ];
+  offers.forEach(([h, b, c], i) => {
+    const y = 1.1 + i * 1.12;
+    card(s, 5.1, y, 4.4, 1.0, `offer-${i}`);
+    dot(s, 5.27, y + 0.18, c, 0.16);
+    T(s, h, { x: 5.55, y: y + 0.1, w: 3.8, h: 0.3, fontSize: 13, bold: true });
+    T(s, b, { x: 5.55, y: y + 0.42, w: 3.8, h: 0.55, fontSize: 11, color: HEX.muted });
+  });
+  T(s, "Next: one client entity's agent team as design partner for the pilot", { x: 5.1, y: 4.5, w: 4.4, h: 0.45, fontSize: 12, italic: true, color: HEX.violet });
+}
+
 // 8 — impact
 {
   const s = pres.addSlide({ masterName: "CONTENT" });
