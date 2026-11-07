@@ -473,7 +473,8 @@ $("#q").onkeydown = (ev) => { if (ev.key === "Enter" && ev.target.value.trim()) 
 addEventListener("resize", () => graph?.resize());
 
 (async () => {
-  try { await load(); show("graph"); }
+  if (qs.get("theme")) document.documentElement.dataset.theme = qs.get("theme");
+  try { await load(); show(qs.get("tab") || "graph"); if (qs.get("open")) await openNote(qs.get("open")); }
   catch (e) { $("#center").innerHTML = `<p class="err page">${esc(e.message)}</p>`; }
 })();
 </script>

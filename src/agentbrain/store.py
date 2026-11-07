@@ -617,7 +617,9 @@ class Store:
 
     async def record(self, caller: Caller | None, tool: str, args: dict[str, Any], status: str, error: str | None,
                      changeset_id: str | None, duration_ms: int, via: str = "mcp") -> None:
-        short = {k: (v[:500] + "…" if isinstance(v, str) and len(v) > 500 else v) for k, v in args.items()}
+        # A refused write is refused because of what it holds: the audit keeps the attempt, never the secret.
+        masked = {k: redact(v)[0] if isinstance(v, str) else v for k, v in args.items()}
+        short = {k: (v[:500] + "…" if isinstance(v, str) and len(v) > 500 else v) for k, v in masked.items()}
         async with self.engine.begin() as conn:
             await conn.execute(insert(audit).values(
                 at=now(), user_id=caller.user if caller else None, client=caller.client if caller else None,

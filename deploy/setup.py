@@ -98,7 +98,7 @@ CLIENTS = [
     {"clientId": "agentbrain-mcp", "name": "agentBrain MCP clients", "enabled": True, "protocol": "openid-connect",
      "publicClient": True, "standardFlowEnabled": True, "directAccessGrantsEnabled": False,
      "implicitFlowEnabled": False, "serviceAccountsEnabled": False,
-     "redirectUris": ["http://localhost:*", "http://127.0.0.1:*"], "webOrigins": [],
+     "redirectUris": ["http://localhost:*", "http://127.0.0.1:*", "http://localhost/*", "http://127.0.0.1/*"], "webOrigins": [],
      "attributes": {"pkce.code.challenge.method": "S256"}},
 ]
 

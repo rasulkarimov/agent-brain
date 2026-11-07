@@ -45,6 +45,16 @@ NODE_EXTRA_CA_CERTS=~/.presight-ca.crt claude
 
 Then `/mcp` → agentbrain → Authenticate signs in through Keycloak in the browser.
 
+Codex (it needs the internal CA next to the public and corporate roots):
+
+```bash
+security find-certificate -a -p /Library/Keychains/System.keychain /System/Library/Keychains/SystemRootCertificates.keychain > ~/.presight-ca-bundle.crt
+cat ~/.presight-ca.crt >> ~/.presight-ca-bundle.crt
+codex mcp add agentbrain --url https://agentbrain.intdev.presight.ai/mcp --oauth-client-id agentbrain-mcp
+SSL_CERT_FILE=~/.presight-ca-bundle.crt codex mcp login agentbrain
+SSL_CERT_FILE=~/.presight-ca-bundle.crt codex
+```
+
 ## Run locally
 
 ```bash

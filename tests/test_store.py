@@ -89,3 +89,11 @@ async def test_a_run_is_one_session_and_same_titled_notes_do_not_collide(store):
     one = await store.write(run, "team/dataplatform", "finding", "same title", "a")
     two = await store.write(run, "team/dataplatform", "finding", "same title", "b")
     assert two["path"] == one["path"].replace(".md", "-2.md") and one["session"] == a["session"]
+
+
+async def test_the_audit_keeps_a_refused_secret_out(store):
+    with pytest.raises(BrainError):
+        await store.write(ANNA, "team/dataplatform", "finding", "creds", "MINIO_SECRET_KEY: Zq8xPl2mWw91")
+    await store.record(ANNA, "brain_write", {"body": "MINIO_SECRET_KEY: Zq8xPl2mWw91"}, "refused", "x", None, 1)
+    row = (await store.audit_list(1))[0]
+    assert "Zq8xPl2mWw91" not in str(row["args"]) and "masked" in row["args"]["body"]
