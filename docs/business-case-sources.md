@@ -4,6 +4,20 @@ Material for `form.md` and `idea.md`, collected from the Telegram channel «LLM 
 
 **Before using any number in the submission:** these are the author's reports, not peer-reviewed data. Numbers marked *secondary* are his retelling of someone else's talk — check the primary source (the video or article he links) and quote that instead.
 
+## UAE and Abu Dhabi: agents in government (official sources)
+
+| What | Number / wording | Source |
+|---|---|---|
+| Abu Dhabi Government Digital Strategy 2025–2027, launched January 2025 by DGE | world's first fully AI-native government by 2027; AED 13 bn; 200+ AI solutions; 100% of government processes digitised end to end; sovereign cloud across all operations | [DGE](https://www.dge.gov.ae/en/news/adg-digital-strategy-update-2025), [Abu Dhabi Media Office](https://www.mediaoffice.abudhabi/en/technology/abu-dhabi-government-digital-strategy-2025-2027-accelerates-ai-native-government-journey/), [The National, 21 Jan 2025](https://www.thenationalnews.com/future/technology/2025/01/21/abu-dhabi-reveals-digital-strategy-2025-2027-with-35bn-for-infrastructure/) |
+| Progress by end of 2025 | 100+ AI use cases across 40+ government entities; a Chief Digital and AI Officer in every entity; ~95% of public sector employees completed AI training | [DGE 2025 highlights](https://www.dge.gov.ae/en/news/2025-dge-highlights) |
+| Agents already acting for residents | TAMM 4.0 with AutoGov handles recurring tasks (licence renewals, utility payments, routine appointments) on its own | [Abu Dhabi Media Office, GITEX 2025](https://www.mediaoffice.abudhabi/en/technology/department-of-government-enablement-launches-tamm-4-during-gitex-global-2025/) |
+| Sovereign cloud for government | multi-year agreement DGE – Microsoft – Core42 (G42), 18 Mar 2025: sovereign cloud for 11 million+ daily digital interactions | [DGE](https://www.dge.gov.ae/en/news/microsoft-g42) |
+| Governance stance | every AI system within governance frameworks that define ownership, oversight and monitoring; "human oversight remains an essential part of the process" (Director General, GovDigital, DGE) | [Gulf News, Sep 2026](https://gulfnews.com/technology/ai-everything-abu-dhabi-government-services-could-act-before-residents-even-ask-1.500691680) |
+| Federal agentic AI framework, 23 Apr 2026 | 50% of government sectors and services to "Agentic AI for autonomous execution and decision-making" within two years; taskforce overseen by Sheikh Mansour bin Zayed, chaired by the Minister of Cabinet Affairs; phased, with continuous performance and impact assessment | [Dubai Media Office](https://www.mediaoffice.ae/en/news/2026/april/23-04/mohammed-bin-rashid-chairs-uae-cabinet-meeting), [WAM](https://www.wam.ae/en/article/bzv0oj7-under-directives-uae-president-and-world-first), [Khaleej Times](https://www.khaleejtimes.com/uae/government/sheikh-mohammed-announces-50-of-uae-govt-services-to-run-on-ai-agents-in-2-years) |
+| Implementation | Phase One services approved and 80,000 federal employees to be trained (18 May 2026); first agents: procurement, tax auditing, customer happiness, technical support | [Dubai Media Office, 18 May 2026](https://mediaoffice.ae/en/news/2026/may/18-05/mohammed-bin-rashid-chairs-uae-cabinet-meeting), [Middle East AI News](https://www.middleeastainews.com/p/uae-launches-first-cohort-of-ai-agents) |
+
+Notes: adoption figures are the governments' own; no independent evaluation was found. The federal release does not describe controls specific to autonomous agents (oversight of their decisions, liability) — that gap is the opening for agentBrain. A June 2026 item on a new federal Artificial Intelligence and Data Authority exists in the Dubai Media Office listing but the page did not load; check it before quoting.
+
 ## Direction of the market
 
 | Claim | Number | Source | Use for |

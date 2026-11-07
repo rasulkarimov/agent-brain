@@ -18,6 +18,8 @@ AI agents forget. What an agent finds in one session — why a job failed, which
 
 On mission-critical and air-gapped sites this is worse. Cloud assistants with built-in memory cannot run there at all, and where agents do run, nothing controls what they remember: no rights on who reads what, no audit of what an agent wrote, no way to undo a bad change, and a real risk of secrets or client data ending up in a memory nobody reviews.
 
+Presight's clients are about to meet this at scale. Abu Dhabi aims to be the world's first fully AI-native government by 2027 (Digital Strategy 2025–2027, AED 13 billion, 200+ AI solutions, sovereign cloud across operations), and in April 2026 the UAE government set out to move 50% of government sectors and services to agentic AI within two years. Abu Dhabi requires every AI system to run within frameworks that define ownership, oversight and monitoring; how an entity shows what its agents knew, who decided and why, and how a wrong step is undone — across many agents from different vendors, each forgetting between sessions — is left to each entity.
+
 We see it in our own work. In AgentGate, where Presight engineers run agents on real operations, one engineer worked on one failing Airflow job for three days in a single AgentGate conversation of 19 messages — "running as expected?", "why did the first try fail?", "why has this failed?". Everything the agent found — the driver running out of memory, the fix, the next failure — lived only in that conversation: a colleague, a new conversation or another assistant could not see it, and when the conversation ends it is gone. How much time this costs across TechOps (10 engineers) and Data Engineering (14) is the pilot's first measurement: a one-week time log and the share of agent conversations that re-investigate a subject already investigated. Business owner: Atul Vishwakarma, Director – Technical Operations.
 
 ## 3. Solution
@@ -88,7 +90,11 @@ No client data, internal hostnames or credentials appear in any material.
 - Measured, not claimed: two-step bench tasks solved with memory vs without; once-failing tasks that stay fixed after a procedure change.
 - Lean: no GPU for the service — one small container (requests: 0.05 CPU, 128 MB) and a database; the distill step runs on the site's existing model.
 - Control: every write to the memory authored and audited (100%); rollback of any session's change in one step; instruction files changed only with approval.
-- Client offer: memory for agents on air-gapped and sovereign sites, where cloud assistants' memory cannot run; packaged with AgentGate or alone.
+- Client offer — three ways:
+  1. Government and regulated entities running agent programmes (Abu Dhabi's AI-native government by 2027, the federal target of 50% of services on agentic AI within two years): the memory layer for their agents, whatever the vendor or model, in their own sovereign cloud or on premises, answering the ownership, oversight and monitoring their frameworks require — author and assistant on every note, audit of every call, rollback of any session.
+  2. Inside Presight's AI products where analysts and investigators work with agents: the memory of a case with rights per case, audit and rollback — a direction to validate with the product teams.
+  3. Engineering teams on client sites, Presight's or the client's own: what a site learns stays on that site and survives shift changes.
+  Next step: a one-to-one review with Solutions and Smart Cities, and one client entity's agent team as design partner for the pilot.
 - Reuse: any team with agents — operations, data engineering, delivery, client engineering teams — by adding workspaces, not code.
 - Direction of the market: AI-native companies are organised around a shared "company brain" of memory and tools (Y Combinator talk "Building And Structuring An AI Native Company"); this is that layer, built for regulated sites.
 

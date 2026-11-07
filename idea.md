@@ -94,7 +94,7 @@ Since then Codex joined: two pieces of work that had passed between Claude and C
 
 **Shared memory makes mixed agents work as a team.** Public experiments in which many people connected their own, different assistants to one shared memory report agents building on each other's work without special integration — the same effect our own case shows on a small scale (section 2b): an on-prem agent and an engineer's Claude Code continuing one investigation.
 
-What agentBrain adds for Presight's sites:
+What agentBrain adds for regulated sites:
 
 - **Built for sites that cannot call out.** No model inside; distill on the site's own model; nothing leaves.
 - **Governance in the platform.** Rights, audit, rollback and protected instructions are enforced by the service, not asked of the model.
@@ -102,6 +102,41 @@ What agentBrain adds for Presight's sites:
 - **Any approved assistant.** Copilot today, another tomorrow, a local model on a client site — same memory, same rules.
 - **Measured.** Two-step bench tasks with and without memory; a fixed failure must stay fixed.
 - **Complements Presight's approved AI platforms** under the AI use policy: it gives Copilot and local agents a governed memory that stays inside the perimeter.
+
+## 3b. For clients: government entities putting agents to work
+
+**The demand is set by policy.** Abu Dhabi's Government Digital Strategy 2025–2027 aims to make the emirate the world's first fully AI-native government by 2027, with AED 13 billion of investment, more than 200 AI solutions, 100% of government processes digitised end to end and sovereign cloud across operations [1][2]. By the end of 2025 more than 100 AI use cases were running across more than 40 government entities, and every entity had appointed a Chief Digital and AI Officer [3]; TAMM AutoGov already handles recurring tasks for residents on its own [4]. At federal level, on 23 April 2026 the UAE government set out a framework to move 50% of government sectors and services to agentic AI "for autonomous execution and decision-making" within two years, with a taskforce and phased rollout under continuous performance assessment [5]; the first government agents — procurement, tax auditing, customer happiness, technical support — followed within weeks, with 80,000 federal employees to be trained [6].
+
+**What these programmes ask for, and what is left to each entity.** Abu Dhabi says every AI system operates within governance frameworks that define ownership, oversight and monitoring, and that human oversight remains essential where consequences are greater [7]. The federal framework sets standards and performance reviews; how an entity shows what its agents knew, who decided and why, and how a wrong step is undone, is left to the entity [5]. When hundreds of agents work across an entity, from different vendors and on different models, each one forgetting between sessions, these questions do not have an answer today.
+
+**What agentBrain gives such an entity:**
+
+| What the programme needs | agentBrain |
+|---|---|
+| Ownership and oversight of what agents do | every note and decision has an author, a session and the assistant that wrote it; workspaces have owners; the console shows it |
+| Monitoring and accountability | every read and write audited; decisions by people recorded by the platform, not by the model |
+| A wrong step can be undone | one session's change rolled back as a whole, history kept |
+| Sovereign cloud, data inside | no model inside; runs in the entity's own sovereign cloud or on premises; nothing leaves |
+| Many vendors and models over time | any assistant that speaks MCP reads and writes the same memory; changing the model or the vendor does not lose what the entity learned |
+| Continuity across services and teams | handovers and shared workspaces instead of retelling; the next agent starts where the last stopped |
+| Lean rollout | one small container and a database per entity; no GPU |
+
+**Three ways to offer it:**
+
+1. **To government and regulated entities running agent programmes** — the memory layer for their agents, whatever the vendor, deployed in their own environment, with their sign-in, their workspaces and their audit. This is the largest and most direct offer.
+2. **Inside Presight's own AI products** — where analysts and investigators work with agents (public safety, financial crime), the memory of a case — what was found, by whom, on what basis — kept with rights per case, an audit trail and rollback. A direction to validate with the product teams, not a claim.
+3. **To engineering teams on client sites** — Presight's or the client's own — so what a site's engineers and their agents learn stays on that site and survives shift changes and rotations.
+
+**Next step to prove demand:** a one-to-one review with Solutions and Smart Cities (offered at Module 1), and one client entity's agent team as a design partner for the pilot.
+
+Sources (official releases first):
+1. DGE — Abu Dhabi Government Digital Strategy 2025–2027 accelerates AI-native government journey: https://www.dge.gov.ae/en/news/adg-digital-strategy-update-2025 (also Abu Dhabi Media Office: https://www.mediaoffice.abudhabi/en/technology/abu-dhabi-government-digital-strategy-2025-2027-accelerates-ai-native-government-journey/)
+2. The National, 21 Jan 2025 — "Abu Dhabi aims to become world's first fully AI-native government": https://www.thenationalnews.com/future/technology/2025/01/21/abu-dhabi-reveals-digital-strategy-2025-2027-with-35bn-for-infrastructure/
+3. DGE — Department of Government Enablement records landmark year under AI-native vision: https://www.dge.gov.ae/en/news/2025-dge-highlights
+4. Abu Dhabi Media Office — DGE launches TAMM 4.0 during GITEX Global 2025: https://www.mediaoffice.abudhabi/en/technology/department-of-government-enablement-launches-tamm-4-during-gitex-global-2025/
+5. Dubai Media Office, 23 Apr 2026 — Mohammed bin Rashid unveils framework to deploy agentic AI across 50% of government sectors within 2 years: https://www.mediaoffice.ae/en/news/2026/april/23-04/mohammed-bin-rashid-chairs-uae-cabinet-meeting (WAM: https://www.wam.ae/en/article/bzv0oj7-under-directives-uae-president-and-world-first)
+6. Dubai Media Office, 18 May 2026 — Cabinet approves federal framework for Agentic AI Project implementation: https://mediaoffice.ae/en/news/2026/may/18-05/mohammed-bin-rashid-chairs-uae-cabinet-meeting
+7. Gulf News, Sep 2026 — Abu Dhabi's AI-native government vision, interview with the Director General of GovDigital, DGE: https://gulfnews.com/technology/ai-everything-abu-dhabi-government-services-could-act-before-residents-even-ask-1.500691680
 
 ## 4. Impact
 
@@ -114,7 +149,7 @@ What agentBrain adds for Presight's sites:
 | Learning | Once-failing tasks that pass after a procedure change, and stay passing | all re-run on every change |
 | Control | Writes to memory attributed and audited; instruction changes approved | 100% |
 | Lean | Infrastructure | no GPU; about one CPU and a database |
-| Client offer | Sites with governed agent memory | with AgentGate's pilot, subject to the site's security approval |
+| Client offer | Government and regulated entities with governed memory for their agents (section 3b) | one client entity as design partner for the pilot; then a packaged offer, subject to each entity's security approval |
 | Reuse | Teams and use cases | operations, then data engineering, delivery and client engineering teams — new workspaces, not new code |
 
 ## 5. Readiness and plan
@@ -127,7 +162,7 @@ What agentBrain adds for Presight's sites:
 | 2 | Events from AgentGate (approvals, merge requests, finished runs); console with history and rollback; approvals for instruction files | a new conversation on a ticket continues where the last stopped; a bad session is rolled back in one step |
 | 3 | Handover with a notice; team workspaces; distill; documents by section | an on-call engineer hands over an investigation in one step |
 | 4 | Bench with and without memory; demo video | measured difference, unsafe 0 |
-| Then | Pilot with AgentGate on a client site; server-side sandbox for bulk edits; GitHub Copilot connected | after the internal pilot |
+| Then | Pilot with one client entity's agent team as design partner; GitHub Copilot connected; server-side sandbox for bulk edits | after the internal pilot |
 
 ## 6. Risks
 
