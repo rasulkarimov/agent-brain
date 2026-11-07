@@ -1,0 +1,6 @@
+# Dev AKS (presight-intdev-uaen-aks-01), next to AgentGate in namespace agentgate.
+hostname: agentbrain.intdev.presight.ai
+oidc:
+  issuerUrl: https://dataplatform-keycloak.presight.ai/auth/realms/dataplatform
+  ingressCidr: 10.119.95.51/32
+adminGroup: agentgate_admin

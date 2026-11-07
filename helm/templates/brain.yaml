@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentbrain
+  labels: {app.kubernetes.io/name: agentbrain, app.kubernetes.io/part-of: agentbrain}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: agentbrain}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: agentbrain, app.kubernetes.io/part-of: agentbrain}
+      annotations:
+        checksum/workspaces: {{ toJson .Values.workspaces | sha256sum | trunc 16 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: brain
+          image: "{{ .Values.image.repository }}:{{ required "image.tag" .Values.image.tag }}"
+          ports:
+            - {name: mcp, containerPort: 8790}
+            - {name: console, containerPort: 8791}
+          env:
+            - {name: BRAIN_AUTH_MODE, value: keycloak}
+            - {name: BRAIN_ISSUER, value: {{ .Values.oidc.issuerUrl | quote }}}
+            - {name: BRAIN_RESOURCE_URL, value: "https://{{ .Values.hostname }}/mcp"}
+            - {name: BRAIN_ADMIN_GROUP, value: {{ .Values.adminGroup | quote }}}
+            - {name: BRAIN_ALLOWED_HOSTS, value: "{{ .Values.hostname }},agentbrain:*,agentbrain.{{ .Release.Namespace }}.svc.cluster.local:*"}
+            - {name: BRAIN_WORKSPACES, value: {{ toJson .Values.workspaces | quote }}}
+            - {name: SSL_CERT_FILE, value: /etc/ca-bundle/ca.crt}
+            - name: DATABASE_URL
+              valueFrom: {secretKeyRef: {name: {{ .Values.secretName }}, key: DATABASE_URL}}
+            - name: BRAIN_PLATFORM_KEY_AGENTGATE
+              valueFrom: {secretKeyRef: {name: {{ .Values.secretName }}, key: BRAIN_PLATFORM_KEY_AGENTGATE}}
+          readinessProbe: {httpGet: {path: /healthz, port: 8791}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /healthz, port: 8790}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: ca-bundle, mountPath: /etc/ca-bundle, readOnly: true}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: ca-bundle
+          configMap: {name: {{ .Values.caBundleConfigMap }}}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentbrain
+  labels: {app.kubernetes.io/name: agentbrain}
+spec:
+  selector: {app.kubernetes.io/name: agentbrain}
+  ports:
+    - {name: mcp, port: 8790, targetPort: 8790}
+    - {name: console, port: 8791, targetPort: 8791}

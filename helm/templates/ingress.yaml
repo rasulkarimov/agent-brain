@@ -1,0 +1,29 @@
+# MCP and its OAuth metadata go straight to agentBrain (it checks the bearer token itself);
+# everything else is the console, behind oauth2-proxy. The platform API (/v1) is in-cluster only.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agentbrain
+  labels: {app.kubernetes.io/name: agentbrain}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 16k
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts: [{{ .Values.hostname | quote }}]
+      secretName: {{ .Values.ingress.tlsSecretName }}
+  rules:
+    - host: {{ .Values.hostname | quote }}
+      http:
+        paths:
+          - path: /mcp
+            pathType: Prefix
+            backend: {service: {name: agentbrain, port: {number: 8790}}}
+          - path: /.well-known/oauth-protected-resource
+            pathType: Prefix
+            backend: {service: {name: agentbrain, port: {number: 8790}}}
+          - path: /
+            pathType: Prefix
+            backend: {service: {name: agentbrain-oauth2-proxy, port: {number: 4180}}}

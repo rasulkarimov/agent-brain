@@ -21,7 +21,43 @@ Models and harnesses change every month; the memory and the tools around them st
 
 ## Status
 
-Planning. First client: [AgentGate](https://github.com/rasulkarimov/agent-gate) — its runner and gateway use agentBrain for memory between runs and for handovers.
+Prototype, running on the internal dev cluster next to AgentGate (namespace `agentgate`):
+
+- MCP at `https://agentbrain.intdev.presight.ai/mcp` — clients sign in to Keycloak themselves (OAuth, PKCE, client `agentbrain-mcp`); the token is checked against the realm's keys and the `agentbrain` audience and never passed on.
+- Tools: `brain_start`, `brain_tree`, `brain_read` (by section, by version), `brain_search`, `brain_write` (notes and documents), `brain_handover`, `brain_history`.
+- Changesets: every session is one change; the console rolls one back as a whole.
+- Instructions in the memory: `CORE.md` and workspace `AGENTS.md` returned on start, writable only by an admin in the console.
+- Refusals: a write with a secret-looking value, an edit of a note, a document changed since it was read (conflict).
+- AgentGate as the first client: its gateway offers the agent `brain_*` on behalf of the run's user (the run is the session), and records every decided approval as an `event` note.
+- Console at `https://agentbrain.intdev.presight.ai/` behind oauth2-proxy: tree, documents with history, sessions with rollback, audit.
+
+Not yet: distill, handover notices outside the memory, team workspaces from Keycloak groups beyond the seed, the bench with and without memory.
+
+## Connect
+
+Claude Code (the cluster's certificate is signed by the internal CA: give Node the CA once):
+
+```bash
+kubectl -n agentgate get cm ca-bundle -o jsonpath='{.data.ca\.crt}' > ~/.presight-ca.crt
+claude mcp add --transport http --client-id agentbrain-mcp --callback-port 33418 agentbrain https://agentbrain.intdev.presight.ai/mcp
+NODE_EXTRA_CA_CERTS=~/.presight-ca.crt claude
+```
+
+Then `/mcp` → agentbrain → Authenticate signs in through Keycloak in the browser.
+
+## Run locally
+
+```bash
+uv sync && uv run pytest
+uv run python -m agentbrain   # dev mode: MCP on :8790 (bearer = user name), console on :8791/?dev_user=<name>
+```
+
+## Deploy
+
+```bash
+python3 deploy/setup.py              # Keycloak clients, database, Secret agentbrain (once)
+helm upgrade --install agentbrain ./helm -n agentgate -f helm/values-dev.yaml --set image.tag=<tag>
+```
 
 ## Documents
 

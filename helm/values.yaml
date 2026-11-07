@@ -1,0 +1,26 @@
+image:
+  repository: presightconreg.azurecr.io/dataplatform/agentbrain/brain
+  tag: ""
+hostname: agentbrain.example.com
+ingress:
+  className: ingress-internal
+  tlsSecretName: ingress-cert
+  namespace: ingress-internal   # where the ingress controller runs (NetworkPolicy)
+# Keycloak realm that signs users in (MCP clients and the console). Clients: deploy/setup.py keycloak.
+oidc:
+  issuerUrl: https://keycloak.example.com/auth/realms/example
+  ingressCidr: ""               # Keycloak's address, when it sits behind an ingress outside the namespace
+adminGroup: agentbrain_admin
+# Workspaces created at start: name, title, readers and writers ("*" = anyone signed in, group names, "user:<id>").
+workspaces:
+  - {name: team/dataplatform, title: Data Platform team, readers: ["*"], writers: ["*"]}
+# One Secret for the app (deploy/setup.py): DATABASE_URL, BRAIN_PLATFORM_KEY_*, OAUTH2_PROXY_*.
+secretName: agentbrain
+database:
+  podSelector: {cnpg.io/cluster: agentgate-db}
+# Platforms that call agentBrain from inside the cluster (pods allowed to reach the MCP port).
+platformPods:
+  - {app.kubernetes.io/name: gateway}
+caBundleConfigMap: ca-bundle
+oauth2Proxy:
+  image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.5

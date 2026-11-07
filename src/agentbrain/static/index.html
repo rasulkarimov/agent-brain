@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agentBrain</title>
+<style>
+:root {
+  --paper: #eef1f4; --sheet: #ffffff; --ink: #1b2430; --muted: #5d6877; --faint: #98a2ae; --rule: #d7dde4;
+  --accent: #3b4ba8; --accent-soft: #e3e6f6;
+  --finding: #2f7d5b; --decision: #6a4fb3; --handover: #b4621a; --gap: #b23a48; --event: #5f6b7a; --doc: #3b4ba8;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #12161c; --sheet: #1a2029; --ink: #e4e8ee; --muted: #9aa5b3; --faint: #687280; --rule: #2a323d;
+    --accent: #8f9cf0; --accent-soft: #252c48; --finding: #5cc095; --decision: #a990ee; --handover: #e39a55;
+    --gap: #ec7a87; --event: #9aa5b3; --doc: #8f9cf0; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
+header { display: flex; align-items: center; gap: 24px; padding: 10px 20px; border-bottom: 1px solid var(--rule); background: var(--sheet); }
+.brand { font-weight: 650; letter-spacing: -0.01em; font-size: 16px; }
+.brand span { color: var(--accent); }
+nav { display: flex; gap: 4px; }
+nav button { background: none; border: 0; padding: 6px 10px; border-radius: 6px; color: var(--muted); font: inherit; cursor: pointer; }
+nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#q { margin-left: auto; width: min(360px, 40vw); padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+#who { color: var(--muted); font-size: 13px; white-space: nowrap; }
+main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 50px); }
+aside { border-right: 1px solid var(--rule); overflow: auto; max-height: calc(100vh - 50px); padding: 12px 0; }
+section#view { overflow: auto; max-height: calc(100vh - 50px); padding: 24px 32px; }
+.ws { padding: 10px 16px 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+.ws em { font-style: normal; font-weight: 400; color: var(--faint); }
+.entry { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 5px 16px 5px 24px; cursor: pointer; color: inherit; font: inherit; border-left: 3px solid transparent; }
+.entry:hover { background: var(--sheet); }
+.entry[aria-selected="true"] { background: var(--sheet); border-left-color: var(--accent); }
+.entry .p { font: 12px/1.4 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.entry .s { display: block; }
+.kind { display: inline-block; font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: 3px; color: #fff; margin-right: 6px; vertical-align: 1px; }
+.k-document { background: var(--doc); } .k-finding { background: var(--finding); } .k-decision { background: var(--decision); }
+.k-handover { background: var(--handover); } .k-runbook-gap { background: var(--gap); } .k-event { background: var(--event); }
+h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.meta { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+.meta code, td code { font: 12px var(--mono); }
+.body { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 18px 22px; white-space: pre-wrap; font: 13.5px/1.6 var(--mono); max-width: 92ch; }
+.links { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.links span { font: 12px var(--mono); padding: 2px 8px; border: 1px solid var(--rule); border-radius: 12px; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 13px; }
+th { color: var(--muted); font-weight: 600; background: var(--paper); }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--accent-soft); }
+.st-ok { color: var(--finding); } .st-refused, .st-error { color: var(--gap); }
+.rolled { color: var(--faint); text-decoration: line-through; }
+button.act { border: 1px solid var(--gap); color: var(--gap); background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font: inherit; }
+button.act:disabled { opacity: .4; cursor: default; }
+button.primary { border: 0; background: var(--accent); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font: inherit; }
+textarea { width: 100%; max-width: 92ch; min-height: 320px; font: 13px/1.6 var(--mono); padding: 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); }
+.stats { display: flex; gap: 28px; margin: 4px 0 24px; flex-wrap: wrap; }
+.stats div b { display: block; font-size: 22px; font-weight: 650; }
+.stats div { color: var(--muted); font-size: 12px; }
+.hint { color: var(--muted); max-width: 70ch; }
+.err { color: var(--gap); }
+.versions { margin-top: 20px; font-size: 13px; }
+.versions button { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 800px) { main { grid-template-columns: 1fr; } aside { max-height: 40vh; border-right: 0; border-bottom: 1px solid var(--rule); } section#view { padding: 16px; } #q { width: 100%; } header { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">agent<span>Brain</span></div>
+  <nav>
+    <button data-tab="memory" aria-current="page">Memory</button>
+    <button data-tab="sessions">Sessions</button>
+    <button data-tab="audit">Audit</button>
+  </nav>
+  <input id="q" type="search" placeholder="Search notes and documents" aria-label="Search">
+  <div id="who"></div>
+</header>
+<main>
+  <aside id="tree" aria-label="Workspaces"></aside>
+  <section id="view"></section>
+</main>
+<script>
+const qs = new URLSearchParams(location.search);
+const devUser = qs.get("dev_user");
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+let me = null, current = null;
+
+async function api(path, opts = {}) {
+  const headers = {"content-type": "application/json", ...(devUser ? {"x-brain-dev-user": devUser} : {})};
+  const r = await fetch(path, {...opts, headers});
+  const data = await r.json().catch(() => ({error: r.statusText}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+const kind = (k) => `<span class="kind k-${esc(k)}">${esc(k)}</span>`;
+const when = (iso) => iso ? iso.replace("T", " ").slice(0, 16) : "";
+
+async function loadTree() {
+  const entries = await api("/api/tree");
+  const byWs = {};
+  for (const w of me.workspaces) byWs[w.workspace] = {title: w.title, items: []};
+  for (const e of entries) {
+    const ws = me.workspaces.map((w) => w.workspace).filter((w) => w === "/" ? !e.path.includes("/") : e.path.startsWith(w + "/"))
+      .sort((a, b) => b.length - a.length)[0] || "/";
+    (byWs[ws] ||= {title: ws, items: []}).items.push(e);
+  }
+  $("#tree").innerHTML = Object.entries(byWs).map(([ws, g]) => `
+    <div class="ws">${esc(ws)} <em>${esc(g.title)} · ${g.items.length}</em></div>
+    ${g.items.sort((a, b) => (a.kind === "document" ? 0 : 1) - (b.kind === "document" ? 0 : 1) || b.updated.localeCompare(a.updated))
+      .map((e) => `<button class="entry" data-path="${esc(e.path)}" aria-selected="${e.path === current}">
+        <span class="s">${kind(e.kind)}${esc(e.summary)}</span>
+        <span class="p">${esc(e.path.slice(ws === "/" ? 0 : ws.length + 1))} · ${esc(e.author)} · ${when(e.updated)}</span></button>`).join("")}`).join("");
+}
+
+async function showDoc(path, version) {
+  current = path;
+  document.querySelectorAll(".entry").forEach((b) => b.setAttribute("aria-selected", b.dataset.path === path));
+  const d = await api(`/api/doc?path=${encodeURIComponent(path)}${version ? `&version=${version}` : ""}`);
+  const isInstr = /(^|\/)(CORE|AGENTS)\.md$/.test(path);
+  $("#view").innerHTML = `
+    <h1>${kind(d.kind)}${esc(d.summary)}</h1>
+    <div class="meta"><code>${esc(d.path)}</code> · version ${d.version}${d.version !== d.latest_version ? ` of ${d.latest_version}` : ""} · ${esc(d.author)} · ${when(d.updated)}</div>
+    ${d.links?.length ? `<div class="links">${d.links.map((l) => `<span>${esc(l)}</span>`).join("")}</div>` : ""}
+    <div class="body">${esc(d.body)}</div>
+    ${isInstr && me.admin && d.version === d.latest_version ? `<p><button class="primary" id="edit">Edit instructions</button></p>` : ""}
+    ${isInstr && !me.admin ? `<p class="hint">Instruction files change only with an admin's approval.</p>` : ""}
+    <div class="versions"><b>History</b><table><tr><th>Version</th><th>By</th><th>Client</th><th>Session</th><th>When</th></tr>
+      ${d.history.map((v) => `<tr><td><button data-v="${v.version}">${v.version}${v.op === "rollback" ? " (rollback)" : ""}${v.deleted ? " · removed" : ""}</button></td>
+        <td>${esc(v.author)}</td><td>${esc(v.client)}</td><td><code>${esc(v.changeset_id)}</code></td><td>${when(v.at)}</td></tr>`).join("")}</table></div>`;
+  $("#view").querySelectorAll("[data-v]").forEach((b) => b.onclick = () => showDoc(path, +b.dataset.v));
+  const edit = $("#edit");
+  if (edit) edit.onclick = () => {
+    $("#view").innerHTML = `<h1>Edit ${esc(path)}</h1><p class="hint">Every agent that enters this workspace follows this file. Saving is the approval.</p>
+      <textarea id="txt">${esc(d.body)}</textarea><p><button class="primary" id="save">Save version ${d.version + 1}</button> <span id="msg"></span></p>`;
+    $("#save").onclick = async () => {
+      try { await api("/api/instructions", {method: "PUT", body: JSON.stringify({path, body: $("#txt").value, base_version: d.version})});
+        await loadTree(); showDoc(path); } catch (e) { $("#msg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+    };
+  };
+}
+
+function home() {
+  const s = me.stats, k = s.by_kind || {};
+  const notes = ["finding", "decision", "handover", "runbook-gap", "event"].reduce((n, x) => n + (k[x] || 0), 0);
+  $("#view").innerHTML = `<h1>Shared memory</h1>
+    <p class="hint">What agents and people found, decided and handed over — readable by the next session, whatever harness it runs in. Pick a note or document on the left.</p>
+    <div class="stats">
+      <div><b>${notes}</b>notes</div><div><b>${k.document || 0}</b>documents</div>
+      <div><b>${s.sessions}</b>sessions</div><div><b>${s.unread_notes}</b>notes nobody has read yet</div>
+    </div>
+    <h3>Calls by client</h3>
+    <table><tr><th>Client</th><th>Calls</th></tr>${Object.entries(s.calls_by_client || {}).map(([c, n]) => `<tr><td>${esc(c)}</td><td>${n}</td></tr>`).join("")}</table>`;
+}
+
+async function sessions() {
+  const rows = await api("/api/sessions");
+  $("#view").innerHTML = `<h1>Sessions</h1><p class="hint">Every session is one change across the whole memory. Roll one back and everything it wrote goes back to how it was.</p>
+    <table><tr><th>Started</th><th>Who</th><th>Client</th><th>Task</th><th>Changes</th><th></th></tr>
+    ${rows.map((r) => `<tr class="click ${r.rolled_back_at ? "rolled" : ""}" data-cid="${esc(r.id)}"><td>${when(r.started_at)}</td><td>${esc(r.user_id)}</td>
+      <td>${esc(r.client)}</td><td>${esc(r.task)}${r.rollback_of ? ` <code>${esc(r.rollback_of)}</code>` : ""}</td><td>${r.changes}</td>
+      <td>${r.rolled_back_at ? `rolled back by ${esc(r.rolled_back_by)}` : (r.changes && r.user_id !== "agentbrain" && (r.user_id === me.user || me.admin) && !r.rollback_of
+        ? `<button class="act" data-rb="${esc(r.id)}">Roll back</button>` : "")}</td></tr>`).join("")}</table>`;
+  $("#view").querySelectorAll("tr[data-cid]").forEach((tr) => tr.onclick = (ev) => { if (!ev.target.dataset.rb) session(tr.dataset.cid); });
+  $("#view").querySelectorAll("[data-rb]").forEach((b) => b.onclick = async () => {
+    if (!confirm(`Roll back ${b.dataset.rb}? Everything it wrote goes back to how it was before.`)) return;
+    b.disabled = true;
+    try { await api(`/api/sessions/${b.dataset.rb}/rollback`, {method: "POST"}); await loadTree(); sessions(); }
+    catch (e) { alert(e.message); b.disabled = false; }
+  });
+}
+
+async function session(cid) {
+  const s = await api(`/api/sessions/${cid}`);
+  $("#view").innerHTML = `<h1>${esc(s.task)}</h1><div class="meta"><code>${esc(s.id)}</code> · ${esc(s.user_id)} · ${esc(s.client)} · ${when(s.started_at)}
+    ${s.rolled_back_at ? ` · rolled back by ${esc(s.rolled_back_by)}` : ""}</div>
+    <table><tr><th>Path</th><th>Kind</th><th>Version</th><th>What</th></tr>
+    ${s.versions.map((v) => `<tr class="click" data-path="${esc(v.path)}" data-v="${v.version}"><td><code>${esc(v.path)}</code></td><td>${kind(v.kind)}</td>
+      <td>${v.version}${v.op === "rollback" ? " (rollback)" : ""}${v.deleted ? " · removed" : ""}</td><td>${esc(v.summary)}</td></tr>`).join("")}</table>
+    ${s.hidden ? `<p class="hint">${s.hidden} change(s) in workspaces you cannot read.</p>` : ""}`;
+  $("#view").querySelectorAll("tr[data-path]").forEach((tr) => tr.onclick = () => showDoc(tr.dataset.path, +tr.dataset.v));
+}
+
+async function audit() {
+  const rows = await api("/api/audit");
+  $("#view").innerHTML = `<h1>Audit</h1><p class="hint">Every call, by every client: who, through what, with which arguments, and what happened.</p>
+    <table><tr><th>When</th><th>Who</th><th>Client</th><th>Tool</th><th>Status</th><th>Arguments</th></tr>
+    ${rows.map((r) => `<tr><td>${when(r.at)}</td><td>${esc(r.user_id)}</td><td>${esc(r.client)}</td><td><code>${esc(r.tool)}</code></td>
+      <td class="st-${esc(r.status)}">${esc(r.status)}${r.error ? `<br><small>${esc(r.error)}</small>` : ""}</td>
+      <td><code>${esc(JSON.stringify(r.args)).slice(0, 240)}</code></td></tr>`).join("")}</table>`;
+}
+
+async function search(q) {
+  const hits = await api(`/api/search?q=${encodeURIComponent(q)}`);
+  $("#view").innerHTML = `<h1>Search: ${esc(q)}</h1>${hits.length ? "" : `<p class="hint">Nothing matches. Try the service, job or ticket id.</p>`}
+    <table>${hits.map((h) => `<tr class="click" data-path="${esc(h.path)}"><td>${kind(h.kind)}<b>${esc(h.summary)}</b><br><code>${esc(h.path)}</code> · ${esc(h.author)} · ${when(h.updated)}<br>
+      <small>${esc(h.snippet)}</small></td></tr>`).join("")}</table>`;
+  $("#view").querySelectorAll("tr[data-path]").forEach((tr) => tr.onclick = () => showDoc(tr.dataset.path));
+}
+
+function tab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.tab === name ? "page" : "false"));
+  const fail = (e) => $("#view").innerHTML = `<p class="err">${esc(e.message)}</p>`;
+  if (name === "memory") (current ? showDoc(current) : Promise.resolve(home())).catch(fail);
+  if (name === "sessions") sessions().catch(fail);
+  if (name === "audit") audit().catch(fail);
+}
+
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => tab(b.dataset.tab));
+$("#tree").onclick = (ev) => { const b = ev.target.closest(".entry"); if (b) { tab("memory"); showDoc(b.dataset.path).catch((e) => alert(e.message)); } };
+$("#q").onkeydown = (ev) => { if (ev.key === "Enter" && ev.target.value.trim()) search(ev.target.value.trim()).catch((e) => alert(e.message)); };
+
+(async () => {
+  try {
+    me = await api("/api/me");
+    $("#who").textContent = `${me.user}${me.admin ? " · admin" : ""}`;
+    await loadTree();
+    home();
+  } catch (e) { $("#view").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+})();
+</script>
+</body>
+</html>

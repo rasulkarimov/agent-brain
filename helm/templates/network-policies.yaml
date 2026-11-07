@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agentbrain
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: agentbrain}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # MCP from the ingress (engineers' clients) and from platforms in the namespace.
+    - ports: [{port: 8790, protocol: TCP}]
+      from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Values.ingress.namespace }}}
+        {{- range .Values.platformPods }}
+        - podSelector:
+            matchLabels: {{ toJson . }}
+        {{- end }}
+    # The console only from its oauth2-proxy: the user headers are trusted on this port.
+    - ports: [{port: 8791, protocol: TCP}]
+      from:
+        - podSelector:
+            matchLabels: {app.kubernetes.io/name: agentbrain-oauth2-proxy}
+  egress:
+    - ports: [{port: 5432, protocol: TCP}]
+      to:
+        - podSelector:
+            matchLabels: {{ toJson .Values.database.podSelector }}
+    # Keycloak's signing keys.
+    - ports: [{port: 443, protocol: TCP}]
+      to:
+        {{- if .Values.oidc.ingressCidr }}
+        - ipBlock: {cidr: {{ .Values.oidc.ingressCidr }}}
+        {{- end }}
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Values.ingress.namespace }}}
+    - ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+      to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agentbrain-oauth2-proxy
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: agentbrain-oauth2-proxy}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - ports: [{port: 4180, protocol: TCP}]
+      from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Values.ingress.namespace }}}
+  egress:
+    - ports: [{port: 8791, protocol: TCP}]
+      to:
+        - podSelector:
+            matchLabels: {app.kubernetes.io/name: agentbrain}
+    - ports: [{port: 443, protocol: TCP}]
+      to:
+        {{- if .Values.oidc.ingressCidr }}
+        - ipBlock: {cidr: {{ .Values.oidc.ingressCidr }}}
+        {{- end }}
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: {{ .Values.ingress.namespace }}}
+    - ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+      to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
