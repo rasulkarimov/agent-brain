@@ -162,7 +162,7 @@ def create_server(settings: Settings, store: Store) -> MCPServer:
         base_version: Annotated[int | None, Field(description="To change an existing document: the version you read")] = None,
         session: Annotated[str | None, Field(description="The session from brain_start")] = None,
     ) -> dict[str, Any]:
-        """Write a note or a new version of a document inside the session's changeset. Notes are never edited: write a new one that links the old. Secrets are refused."""
+        """Write a note or a new version of a document inside the session's changeset. Notes are never edited: write a new one that links the old. Write only what is new: a re-check that finds what a note already says adds nothing, so write nothing; state that keeps changing (an incident, a migration) is one document with versions, not a note per check. Secrets are refused."""
         return await run(ctx, "brain_write", path=path, kind=kind, summary=summary, body=body, links=links,
                          base_version=base_version, session=session)
 
